@@ -1,0 +1,88 @@
+/* ═══════════════════════════════════════════════
+   GMUSIC — RESPONSIVE BREAKPOINTS
+   Mobile first: ajustes desde 768px hacia abajo
+═══════════════════════════════════════════════ */
+
+/* Tablet — 768px */
+@media (max-width: 768px) {
+  /* Navbar */
+  .gmusic-nav { display: none !important; }
+  .gmusic-ctas { display: none !important; }
+  .gmusic-hamburger { display: flex !important; }
+
+  /* Hero */
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100%;
+  }
+  .hero-buttons button {
+    width: 100% !important;
+  }
+
+  /* Testimonials grid */
+  .testimonials-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Comunidad grid */
+  .community-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    padding: 0 24px !important;
+  }
+  .community-image-first {
+    order: -1 !important;
+  }
+
+  /* Footer grid */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 32px !important;
+  }
+
+  /* InteractiveLevelSelector — modo vertical */
+  .level-selector-wrap {
+    flex-direction: column !important;
+    height: auto !important;
+    gap: 8px !important;
+  }
+  .level-selector-wrap > div {
+    width: 100% !important;
+    min-width: unset !important;
+    height: 120px !important;
+    flex: none !important;
+    border-radius: 18px !important;
+  }
+  .level-selector-wrap > div[data-active="true"] {
+    height: 200px !important;
+  }
+
+  /* Album cards */
+  .album-card {
+    min-width: 160px !important;
+    max-width: 160px !important;
+  }
+
+  /* Section padding */
+  section {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* Mobile — 480px */
+@media (max-width: 480px) {
+  /* Footer colapsa a 1 columna */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Testimonials - 1 columna ya cubierta arriba */
+
+  /* Hero h1 más pequeño */
+  .hero-h1 {
+    font-size: clamp(28px, 9vw, 44px) !important;
+    letter-spacing: -1px !important;
+    line-height: 1.2 !important;
+  }
+}

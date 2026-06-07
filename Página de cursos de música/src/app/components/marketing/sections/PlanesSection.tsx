@@ -1,0 +1,123 @@
+import { motion } from "motion/react";
+import { GOLD, GOLD_SOFT, WHITE_WARM, TEXT_SEC, BG_SURFACE, BORDER, fadeUp, vp } from "../tokens";
+
+interface PlanesSectionProps {
+  setPage: (page: string) => void;
+}
+
+export function PlanesSection({ setPage }: PlanesSectionProps) {
+  const planes = [
+    { nombre: "Mensual", tag: null },
+    { nombre: "Semestral", tag: "El más elegido" },
+    { nombre: "Anual", tag: null },
+  ];
+
+  return (
+    <section id="planes" style={{
+      background: "#0D0D0D", padding: "120px 0", overflow: "hidden", position: "relative",
+    }}>
+      <div style={{
+        position: "absolute", width: 600, height: 500,
+        background: "radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 70%)",
+        filter: "blur(80px)", pointerEvents: "none",
+        top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+      }} />
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 80px", position: "relative", zIndex: 2 }}>
+        <motion.div
+          initial="hidden" whileInView="show" viewport={vp}
+          variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+          style={{ textAlign: "center", marginBottom: 64 }}
+        >
+          <motion.span variants={fadeUp} transition={{ duration: 0.5 }} style={{
+            display: "inline-block", fontSize: 11, fontWeight: 500,
+            letterSpacing: "3px", textTransform: "uppercase",
+            color: GOLD, fontFamily: "Inter, sans-serif",
+          }}>
+            Planes
+          </motion.span>
+          <motion.h2 variants={fadeUp} transition={{ duration: 0.6, delay: 0.06 }} style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(30px, 4vw, 48px)",
+            fontWeight: 400, letterSpacing: "-1.2px",
+            lineHeight: 1.2, color: WHITE_WARM, margin: "16px auto 0",
+          }}>
+            Los precios se anuncian<br />
+            <span style={{ color: "rgba(245,240,232,0.45)", fontWeight: 300 }}>al abrir inscripciones.</span>
+          </motion.h2>
+          <motion.p variants={fadeUp} transition={{ duration: 0.5, delay: 0.12 }} style={{
+            color: TEXT_SEC, fontSize: 16, lineHeight: 1.7,
+            fontFamily: "Inter, sans-serif", maxWidth: 480, margin: "20px auto 0",
+          }}>
+            Estamos preparando el acceso. Mientras tanto, puedes probar el método
+            gratis y reservar tu lugar.
+          </motion.p>
+        </motion.div>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 16, maxWidth: 900, margin: "0 auto",
+        }}>
+          {planes.map((plan, i) => {
+            const isCenter = i === 1;
+            return (
+              <motion.div
+                key={plan.nombre}
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={vp} transition={{ duration: 0.55, delay: 0.1 + i * 0.1 }}
+                style={{
+                  background: isCenter ? "rgba(201,168,76,0.04)" : BG_SURFACE,
+                  border: `1px solid ${isCenter ? "rgba(201,168,76,0.28)" : BORDER}`,
+                  borderRadius: 4, padding: "36px 28px",
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  gap: 16, textAlign: "center",
+                  ...(isCenter ? { marginTop: -12, marginBottom: -12 } : {}),
+                }}
+              >
+                {plan.tag && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, letterSpacing: "2px",
+                    textTransform: "uppercase", color: GOLD, fontFamily: "Inter, sans-serif",
+                  }}>{plan.tag}</span>
+                )}
+                <div style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 22, fontWeight: 400,
+                  color: WHITE_WARM, letterSpacing: "-0.5px",
+                }}>{plan.nombre}</div>
+                <div style={{
+                  fontSize: 11, color: "rgba(201,168,76,0.5)",
+                  fontFamily: "Inter, sans-serif", letterSpacing: "1.5px", textTransform: "uppercase",
+                }}>
+                  Próximamente
+                </div>
+                <div style={{ width: 32, height: 1, background: "rgba(201,168,76,0.2)" }} />
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={vp} transition={{ duration: 0.5, delay: 0.2 }}
+          style={{ textAlign: "center", marginTop: 48 }}
+        >
+          <motion.button
+            whileHover={{ background: GOLD_SOFT, boxShadow: "0 10px 32px rgba(201,168,76,0.35)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setPage("probar")}
+            style={{
+              height: 50, padding: "0 40px", borderRadius: 2,
+              background: GOLD, color: "#080808", fontSize: 13, fontWeight: 700,
+              border: "none", cursor: "pointer", letterSpacing: "1px",
+              textTransform: "uppercase", fontFamily: "Inter, sans-serif",
+              boxShadow: "0 4px 20px rgba(201,168,76,0.2)",
+            }}
+          >
+            Probar gratis
+          </motion.button>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

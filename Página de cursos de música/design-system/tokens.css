@@ -1,0 +1,69 @@
+/**
+ * Gmusic Estudio — Design Tokens v1
+ * Fuente de verdad CSS. Espejo de design-system/MASTER.md
+ * Nombres: var(--[categoria]-[nombre])
+ * Referencia Figma: docs/FIGMA-CODIGO-CONTEXTO.md
+ */
+
+:root {
+  /* ── Fondos ─────────────────────────────────── */
+  --bg-base:        #080808;   /* Fondo global */
+  --bg-surface:     #111111;   /* Cards, nav scrolled */
+  --bg-mid:         #0D0D0D;   /* Secciones alternas */
+  --bg-elevated:    #1A1A1A;   /* Hover states */
+
+  /* ── Dorado ─────────────────────────────────── */
+  --gold-primary:   #C9A84C;   /* CTAs, acentos principales */
+  --gold-soft:      #E8C97A;   /* Hover de CTAs dorados */
+  --gold-border:    rgba(201, 168, 76, 0.18);   /* Bordes de cards */
+  --gold-glow:      rgba(201, 168, 76, 0.06);   /* Glows ambientales */
+
+  /* ── Texto ──────────────────────────────────── */
+  --text-primary:   #F5F0E8;   /* Titulares, blanco cálido */
+  --text-secondary: #8A8A8A;   /* Body, subtítulos */
+  --text-muted:     rgba(255, 255, 255, 0.28);  /* Microcopy, hints */
+
+  /* ── Bordes ─────────────────────────────────── */
+  --border-subtle:  rgba(255, 255, 255, 0.06);  /* Bordes de cards */
+  --border-mid:     rgba(255, 255, 255, 0.10);  /* Inputs */
+
+  /* ── Acento mínimo (no protagonista) ────────── */
+  --blue-accent:    #4A6FA5;
+
+  /* ── Grid ───────────────────────────────────── */
+  --max-width:      1280px;
+  --padding-x:      80px;
+  --padding-x-mobile: 20px;
+  --section-py:     120px;
+  --section-py-mobile: 72px;
+
+  /* ── Escala de espaciado (base 8px) ─────────── */
+  --space-1:  8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  40px;
+  --space-6:  48px;
+  --space-8:  64px;
+  --space-10: 80px;
+  --space-15: 120px;
+
+  /* ── Tipografía ─────────────────────────────── */
+  --font-display: 'Playfair Display', serif;
+  --font-body:    'Inter', 'Outfit', sans-serif;
+
+  /* ── Radios ─────────────────────────────────── */
+  --radius-sm:  2px;   /* Botones, cards, inputs — estándar */
+  --radius-md:  4px;   /* Imágenes, containers */
+  --radius-lg:  8px;   /* Elementos flotantes */
+
+  /* ── Sombras ────────────────────────────────── */
+  --shadow-card:    0 40px 80px rgba(0, 0, 0, 0.7);
+  --shadow-float:   0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-gold:    0 8px 32px rgba(201, 168, 76, 0.25);
+
+  /* ── Transiciones ───────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease;
+}
