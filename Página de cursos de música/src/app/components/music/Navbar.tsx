@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-
-const GOLD = "#C9A84C";
+import { GM_GOLD } from "../gmusic/tokens";
+import { MOCK_USER, getUserLevelMonthLabel } from "../../data/mock-user";
 const WHITE_WARM = "#F5F0E8";
 const BORDER = "rgba(255,255,255,0.06)";
-
-// Mock: usuario logueado para demo
-const MOCK_USER = {
-  name: "Carlos M.",
-  level: "Fundamento",
-  month: 2,
-  streak: 11,
-  xp: 1240,
-  weeklyDone: 4,
-  weeklyTotal: 5,
-};
 
 interface NavbarProps {
   currentPage?: string;
@@ -69,7 +58,7 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
     ["Contacto", "contacto"],
   ];
 
-  const initials = MOCK_USER.name.split(" ").map(w => w[0]).join("").slice(0, 2);
+  const initials = MOCK_USER.initials;
 
   return (
     <>
@@ -88,12 +77,12 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
           {/* Logo */}
           <div onClick={() => scrollToSection("hero")} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GM_GOLD} strokeWidth="2" strokeLinecap="round">
                 <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
               </svg>
             </div>
             <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 600, color: WHITE_WARM, letterSpacing: "-0.3px" }}>
-              Gmusic <span style={{ color: GOLD, fontWeight: 400 }}>Estudio</span>
+              Gmusic <span style={{ color: GM_GOLD, fontWeight: 400 }}>Estudio</span>
             </span>
           </div>
 
@@ -111,7 +100,7 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                   onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = "#6B6B6B"; }}
                 >
                   {label}
-                  {isActive && <span style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 3, height: 3, borderRadius: "50%", background: GOLD, display: "block" }} />}
+                  {isActive && <span style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 3, height: 3, borderRadius: "50%", background: GM_GOLD, display: "block" }} />}
                 </span>
               );
             })}
@@ -137,14 +126,14 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                   background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)",
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>
-                  <span style={{ fontSize: 10, color: GOLD, fontFamily: "Inter,sans-serif", fontWeight: 700 }}>{initials}</span>
+                  <span style={{ fontSize: 10, color: GM_GOLD, fontFamily: "Inter,sans-serif", fontWeight: 700 }}>{initials}</span>
                 </div>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontSize: 12, color: WHITE_WARM, fontFamily: "Inter,sans-serif", fontWeight: 500, lineHeight: 1.2 }}>
-                    {MOCK_USER.name.split(" ")[0]}
+                    {MOCK_USER.name}
                   </div>
                   <div style={{ fontSize: 10, color: "rgba(201,168,76,0.6)", fontFamily: "Inter,sans-serif", letterSpacing: "0.5px" }}>
-                    {MOCK_USER.level} · Mes {MOCK_USER.month}
+                    {getUserLevelMonthLabel()}
                   </div>
                 </div>
                 <svg
@@ -157,9 +146,9 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
             ) : (
               /* Sin sesión */
               <button
-                onClick={() => setPage && setPage("curriculum")}
+                onClick={() => setPage && setPage("mi-estudio")}
                 style={{
-                  background: "rgba(0,0,0,0)", color: GOLD, fontSize: 13, fontWeight: 500,
+                  background: "rgba(0,0,0,0)", color: GM_GOLD, fontSize: 13, fontWeight: 500,
                   padding: "0 20px", height: 36, borderRadius: 2,
                   border: "1px solid rgba(201,168,76,0.35)", cursor: "pointer",
                   transition: "border-color 0.15s, background 0.15s", letterSpacing: "0.3px",
@@ -235,14 +224,14 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                     background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, color: GOLD }}>{initials}</span>
+                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, color: GM_GOLD }}>{initials}</span>
                   </div>
                   <div>
                     <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, color: WHITE_WARM, fontWeight: 400 }}>
-                      Bienvenido, {MOCK_USER.name.split(" ")[0]}
+                      Bienvenido, {MOCK_USER.name}
                     </div>
                     <div style={{ fontSize: 11, color: "rgba(201,168,76,0.6)", fontFamily: "Inter,sans-serif", letterSpacing: "1px", textTransform: "uppercase", marginTop: 2 }}>
-                      {MOCK_USER.level} · Mes {MOCK_USER.month}
+                      {getUserLevelMonthLabel()}
                     </div>
                   </div>
                 </div>
@@ -251,13 +240,13 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
               {/* Stats compactas */}
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 {[
-                  { icon: "🔥", value: MOCK_USER.streak, label: "racha" },
+                  { icon: "🔥", value: MOCK_USER.streakDays, label: "racha" },
                   { icon: "⚡", value: `${MOCK_USER.xp.toLocaleString()}`, label: "XP" },
                   { icon: "✓", value: `${MOCK_USER.weeklyDone}/${MOCK_USER.weeklyTotal}`, label: "semana" },
                 ].map(stat => (
                   <div key={stat.label} style={{ textAlign: "center", padding: "8px 4px", background: "rgba(255,255,255,0.02)", borderRadius: 2, border: `1px solid ${BORDER}` }}>
                     <div style={{ fontSize: 14, marginBottom: 2 }}>{stat.icon}</div>
-                    <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: GOLD }}>{stat.value}</div>
+                    <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: GM_GOLD }}>{stat.value}</div>
                     <div style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: "Inter,sans-serif", letterSpacing: "0.5px", textTransform: "uppercase" }}>{stat.label}</div>
                   </div>
                 ))}
@@ -267,10 +256,10 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
               <div style={{ padding: "12px 20px", borderBottom: `1px solid ${BORDER}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "Inter,sans-serif" }}>Progreso semanal</span>
-                  <span style={{ fontSize: 11, color: GOLD, fontFamily: "Inter,sans-serif", fontWeight: 600 }}>{MOCK_USER.weeklyDone}/{MOCK_USER.weeklyTotal}</span>
+                  <span style={{ fontSize: 11, color: GM_GOLD, fontFamily: "Inter,sans-serif", fontWeight: 600 }}>{MOCK_USER.weeklyDone}/{MOCK_USER.weeklyTotal}</span>
                 </div>
                 <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden" }}>
-                  <div style={{ width: `${(MOCK_USER.weeklyDone / MOCK_USER.weeklyTotal) * 100}%`, height: "100%", background: GOLD, borderRadius: 2, transition: "width 0.5s" }} />
+                  <div style={{ width: `${(MOCK_USER.weeklyDone / MOCK_USER.weeklyTotal) * 100}%`, height: "100%", background: GM_GOLD, borderRadius: 2, transition: "width 0.5s" }} />
                 </div>
               </div>
 
@@ -281,7 +270,7 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                   style={{
                     width: "100%", height: 38, borderRadius: 2,
                     background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)",
-                    color: GOLD, fontSize: 12, fontFamily: "Inter,sans-serif", fontWeight: 600,
+                    color: GM_GOLD, fontSize: 12, fontFamily: "Inter,sans-serif", fontWeight: 600,
                     cursor: "pointer", letterSpacing: "0.5px",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                   }}
@@ -290,7 +279,7 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                   Mi Estudio
                 </button>
                 <button
-                  onClick={() => { setProfileOpen(false); setPage && setPage("curriculum"); }}
+                  onClick={() => { setProfileOpen(false); setPage && setPage("mi-camino"); }}
                   style={{
                     width: "100%", height: 36, borderRadius: 2,
                     background: "rgba(255,255,255,0.02)", border: `1px solid ${BORDER}`,
@@ -301,18 +290,6 @@ export function Navbar({ currentPage, setPage, loggedIn = true }: NavbarProps) {
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 9-14 9V3z" /></svg>
                   Continuar curso
-                </button>
-                <button
-                  onClick={() => { setProfileOpen(false); setPage && setPage("dashboard"); }}
-                  style={{
-                    width: "100%", height: 36, borderRadius: 2,
-                    background: "rgba(255,255,255,0.02)", border: `1px solid ${BORDER}`,
-                    color: "rgba(255,255,255,0.4)", fontSize: 11, fontFamily: "Inter,sans-serif",
-                    cursor: "pointer", letterSpacing: "0.5px",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                  }}
-                >
-                  Ver panel completo
                 </button>
                 <button
                   onClick={() => setProfileOpen(false)}

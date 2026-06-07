@@ -1,0 +1,10 @@
+export const GM_BG = "#0A0A0A";
+export const GM_SURFACE = "#121212";
+export const GM_SURFACE_ALT = "#181818";
+export const GM_GOLD = "#D4AF37";
+export const GM_GOLD_MATT = "rgba(212, 175, 55, 0.3)";
+export const GM_GOLD_GLOW = "rgba(212, 175, 55, 0.15)";
+export const GM_TEXT = "#F5F5F7";
+export const GM_TEXT_SEC = "#A0A0A5";
+export const GM_BORDER = "#222";
+export const GM_LOCKED = "#444";

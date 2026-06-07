@@ -4,6 +4,7 @@ import { Navbar } from "./components/music/Navbar";
 import { MusicPlayer } from "./components/music/MusicPlayer";
 import { GmusicLanding } from "./pages/GmusicLanding";
 import { GmusicWelcome } from "./pages/GmusicWelcome";
+import { GmusicPath } from "./pages/GmusicPath";
 import { CoursesPage } from "./pages/legacy/AlbumCoursesPages";
 import { AlbumPage } from "./pages/legacy/AlbumCoursesPages";
 import { InstrumentCoursesPage } from "./pages/legacy/InstrumentCoursesPage";
@@ -17,6 +18,8 @@ import { CurriculumPage } from "./pages/CurriculumPage";
 import { AuthModal } from "./components/music/AuthModal";
 import { preloadCriticalImages } from "./utils/image-config";
 import "../styles/animations.css";
+
+const DEV_LEGACY = import.meta.env.DEV;
 
 // v4.0 - Sistema completo de monetización
 export default function App() {
@@ -95,7 +98,7 @@ export default function App() {
 
   return (
     <div style={{ fontFamily:"'Inter','Outfit',sans-serif", background:"#080808", minHeight:"100vh", color:"#fff" }}>
-      {!["curriculum","lesson","dashboard","welcome","mi-estudio"].includes(currentPage) && (
+      {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino"].includes(currentPage) && (
         <Navbar currentPage={currentPage} setPage={setCurrentPage} />
       )}
 
@@ -113,6 +116,10 @@ export default function App() {
 
       {(currentPage === "welcome" || currentPage === "mi-estudio") && (
         <GmusicWelcome setPage={setCurrentPage} />
+      )}
+
+      {currentPage === "mi-camino" && (
+        <GmusicPath setPage={setCurrentPage} />
       )}
 
       {currentPage === "album" && selectedAlbum && (
@@ -170,15 +177,15 @@ export default function App() {
         <ProbarPage setPage={setCurrentPage} />
       )}
 
-      {currentPage === "dashboard" && (
+      {DEV_LEGACY && currentPage === "dashboard" && (
         <DashboardPage setPage={setCurrentPage} />
       )}
 
-      {currentPage === "lesson" && (
+      {DEV_LEGACY && currentPage === "lesson" && (
         <LessonPage setPage={setCurrentPage} onComplete={() => handleLessonComplete(1)} />
       )}
 
-      {currentPage === "curriculum" && (
+      {DEV_LEGACY && currentPage === "curriculum" && (
         <CurriculumPage
           setPage={setCurrentPage}
           xp={totalXp}
@@ -196,7 +203,7 @@ export default function App() {
         defaultTab="register"
       />
 
-      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && (
+      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && currentPage !== "mi-camino" && (
         <MusicPlayer
           track={currentTrack}
           playlist={playlist}
