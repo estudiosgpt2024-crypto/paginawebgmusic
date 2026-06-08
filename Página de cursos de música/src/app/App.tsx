@@ -17,6 +17,11 @@ import { LessonPage } from "./pages/LessonPage";
 import { CurriculumPage } from "./pages/CurriculumPage";
 import { AuthModal } from "./components/music/AuthModal";
 import { preloadCriticalImages } from "./utils/image-config";
+import {
+  getInitialPageFromPath,
+  initStudentZoneRouting,
+  navigateStudentZoneAware,
+} from "./utils/student-zone-routing";
 import "../styles/animations.css";
 
 const DEV_LEGACY = import.meta.env.DEV;
@@ -29,7 +34,7 @@ export default function App() {
   const [playlist] = useState(TRACKS);
 
   // Navigation state
-  const [currentPage, setCurrentPage] = useState("home");
+  const [currentPage, setCurrentPage] = useState(getInitialPageFromPath);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState("fundamento");
   const [selectedInstrument, setSelectedInstrument] = useState("guitarra");
@@ -96,10 +101,19 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const cleanup = initStudentZoneRouting(setCurrentPage);
+    return cleanup;
+  }, []);
+
+  const handlePageChange = (page: string) => {
+    navigateStudentZoneAware(page, setCurrentPage, currentPage);
+  };
+
   return (
     <div style={{ fontFamily:"'Inter','Outfit',sans-serif", background:"#080808", minHeight:"100vh", color:"#fff" }}>
       {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino"].includes(currentPage) && (
-        <Navbar currentPage={currentPage} setPage={setCurrentPage} />
+        <Navbar currentPage={currentPage} setPage={handlePageChange} />
       )}
 
       {currentPage === "home" && (
@@ -108,18 +122,18 @@ export default function App() {
           onPlayAlbum={onPlayAlbum}
           currentTrack={currentTrack}
           playing={playing}
-          setPage={setCurrentPage}
+          setPage={handlePageChange}
           setAlbum={setSelectedAlbum}
           setLevel={setSelectedLevel}
         />
       )}
 
       {(currentPage === "welcome" || currentPage === "mi-estudio") && (
-        <GmusicWelcome setPage={setCurrentPage} />
+        <GmusicWelcome setPage={handlePageChange} />
       )}
 
       {currentPage === "mi-camino" && (
-        <GmusicPath setPage={setCurrentPage} />
+        <GmusicPath setPage={handlePageChange} />
       )}
 
       {currentPage === "album" && selectedAlbum && (

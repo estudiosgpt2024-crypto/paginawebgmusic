@@ -26,12 +26,23 @@ Guía visual local: `DESIGN.md`
 
 Convención de nombre: carpeta = `name:` en frontmatter = kebab-case (`gmusic-welcome`).
 
-## Rutas internas
+## Rutas internas (zona alumno)
+
+Solo estas URLs tienen pathname real por ahora. El resto del sitio sigue en `currentPage` sin sincronizar URL.
 
 | Página | currentPage | URL |
 |--------|-------------|-----|
-| Mi Estudio | `mi-estudio` | `/alumno` |
+| Mi Estudio | `mi-estudio` / `welcome` | `/alumno` |
 | Mi Camino | `mi-camino` | `/mi-camino` |
+
+Implementación: `src/app/utils/student-zone-routing.ts` + wrapper `handlePageChange` en `App.tsx` (Navbar, landing, Mi Estudio, Mi Camino).
+
+Reglas de navegación:
+
+- Entrar o moverse dentro de zona alumno → `pushState` a `/alumno` o `/mi-camino`.
+- Salir de zona alumno hacia páginas públicas/legacy → `replaceState("/")` + `setPage`.
+- `popstate` reconoce solo `/`, `/alumno` y `/mi-camino`; pathname desconocido → `home`.
+- No agregar rutas URL nuevas sin una fase explícita de routing global.
 
 ## Reglas generales
 
