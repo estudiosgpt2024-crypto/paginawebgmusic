@@ -5,6 +5,8 @@ export { PremiumCard } from "./PremiumCard";
 export { ChunkyButton } from "./ChunkyButton";
 export { WelcomeHeroCard } from "./WelcomeHeroCard";
 export { PracticeCard } from "./PracticeCard";
+export { CompletedPathCard } from "./CompletedPathCard";
+export { DashboardErrorBanner } from "./DashboardErrorBanner";
 export { MetricCard } from "./MetricCard";
 export type { MetricCardProps, ProgressMetricCardProps, XpMetricCardProps } from "./MetricCard";
 export { QuoteCard } from "./QuoteCard";

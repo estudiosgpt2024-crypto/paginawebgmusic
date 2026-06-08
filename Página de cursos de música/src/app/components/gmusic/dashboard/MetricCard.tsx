@@ -35,7 +35,7 @@ export type XpMetricCardProps = MetricCardBaseProps & {
   xpTotal: number;
   weeklyGain: number;
   consistencyStatus: string;
-  exercisesUntilChest: number;
+  exercisesUntilChest?: number;
 };
 
 export type MetricCardProps = ProgressMetricCardProps | XpMetricCardProps;
@@ -130,7 +130,9 @@ export function MetricCard(props: MetricCardProps) {
               <span className="font-semibold text-[#C9A84C]">{props.consistencyStatus}</span>
             </p>
             <p className="text-[12px] leading-relaxed" style={{ color: "rgba(160,160,165,0.8)" }}>
-              Faltan {props.exercisesUntilChest} ejercicios para abrir tu cofre semanal.
+              {props.exercisesUntilChest != null
+                ? `Faltan ${props.exercisesUntilChest} ejercicios para abrir tu cofre semanal.`
+                : "Tu actividad semanal se refleja en el XP que acumulas."}
             </p>
           </div>
         </div>

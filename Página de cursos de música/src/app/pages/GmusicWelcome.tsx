@@ -8,18 +8,14 @@ import {
   DashboardShell,
   WelcomeHeroCard,
   PracticeCard,
+  CompletedPathCard,
+  DashboardErrorBanner,
   MetricCard,
   QuoteCard,
   LockedFeatureCard,
 } from "../components/gmusic/dashboard";
-import { ACTIVE_NODE_PANEL } from "../data/gmusic-path-data";
 import { GM_BG, GM_TEXT } from "../components/gmusic/tokens";
-import {
-  MOCK_USER,
-  getStreakDaysLabel,
-  getMonthlyProgressLabel,
-  getUserLevelMonthLabel,
-} from "../data/mock-user";
+import { useDashboard } from "../hooks/useDashboard";
 
 interface GmusicWelcomeProps {
   setPage: (page: string) => void;
@@ -30,12 +26,12 @@ type AudioState = "pending" | "granted" | "denied";
 const DAILY_QUOTE =
   "La constancia le gana al talento cuando el talento no practica.";
 const PRACTICE_WEEK_LINE = "Semana 3 · Ritmo y acordes base";
-const RECOMMENDED_WEEKLY = 3;
 
 export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
   const [audioState, setAudioState] = useState<AudioState>("pending");
   const [isCheckingPermission, setIsCheckingPermission] = useState(true);
   const [showLockedModal, setShowLockedModal] = useState(false);
+  const dashboard = useDashboard();
 
   const handleNavPlaceholder = (key: string) => {
     if (isLockedNav(key)) setShowLockedModal(true);
@@ -81,6 +77,9 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
     return "Preparar estudio";
   })();
 
+  const isLoading = dashboard.status === "loading";
+  const viewModel = dashboard.status === "success" ? dashboard.viewModel : null;
+
   return (
     <div
       className="min-h-screen"
@@ -98,11 +97,17 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
       />
 
       <DashboardShell>
+        {dashboard.status === "error" && (
+          <DashboardSection className="mb-4 lg:mb-5">
+            <DashboardErrorBanner message={dashboard.message} onRetry={dashboard.retry} />
+          </DashboardSection>
+        )}
+
         <DashboardSection className="mb-4 lg:mb-5">
           <WelcomeHeroCard
-            userName={MOCK_USER.name}
+            userName={isLoading ? "…" : (viewModel?.userName ?? "…")}
             practiceWeekLine={PRACTICE_WEEK_LINE}
-            streakLabel={getStreakDaysLabel()}
+            streakLabel={isLoading ? "…" : (viewModel?.streakLabel ?? "—")}
             audioLabel={audioLabel}
             audioState={audioState}
             isCheckingPermission={isCheckingPermission}
@@ -110,37 +115,52 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
           />
         </DashboardSection>
 
-        <DashboardSection className="mb-6 lg:mb-7">
-          <PracticeCard
-            title={ACTIVE_NODE_PANEL.title}
-            typeLabel={ACTIVE_NODE_PANEL.typeLabel}
-            description={ACTIVE_NODE_PANEL.description}
-            onContinue={goToCamino}
-          />
-        </DashboardSection>
+        {dashboard.status !== "error" && (
+          <DashboardSection className="mb-6 lg:mb-7">
+            {isLoading ? (
+              <PracticeCard
+                title="Cargando práctica…"
+                typeLabel="Conectando con tu estudio"
+                description="Estamos preparando tu próxima sesión."
+                onContinue={goToCamino}
+                isLoading
+              />
+            ) : viewModel?.pathComplete ? (
+              <CompletedPathCard onViewPath={goToCamino} />
+            ) : viewModel?.nextPractice ? (
+              <PracticeCard
+                title={viewModel.nextPractice.title}
+                typeLabel={viewModel.nextPractice.typeLabel}
+                description={viewModel.nextPractice.description}
+                onContinue={goToCamino}
+              />
+            ) : null}
+          </DashboardSection>
+        )}
 
-        <DashboardGrid className="mb-6 lg:mb-7">
-          <MetricCard
-            variant="progress"
-            icon={TrendingUp}
-            eyebrow="Progreso del módulo"
-            value={getMonthlyProgressLabel()}
-            suffix="completado"
-            progressPercent={MOCK_USER.monthlyProgress}
-            nodeTitle={MOCK_USER.currentNodeTitle}
-            phaseLabel={getUserLevelMonthLabel()}
-          />
-          <MetricCard
-            variant="xp"
-            icon={Activity}
-            eyebrow="XP y constancia"
-            xpTotal={MOCK_USER.xp}
-            weeklyGain={180}
-            consistencyStatus="En ritmo"
-            exercisesUntilChest={Math.max(0, RECOMMENDED_WEEKLY - MOCK_USER.weeklyDone)}
-          />
-          <QuoteCard quote={DAILY_QUOTE} />
-        </DashboardGrid>
+        {dashboard.status !== "error" && (
+          <DashboardGrid className="mb-6 lg:mb-7">
+            <MetricCard
+              variant="progress"
+              icon={TrendingUp}
+              eyebrow="Progreso del módulo"
+              value={isLoading ? "…" : (viewModel?.progressPercentLabel ?? "—")}
+              suffix="completado"
+              progressPercent={isLoading ? 0 : (viewModel?.progressPercent ?? 0)}
+              nodeTitle={isLoading ? "…" : (viewModel?.currentNodeTitle ?? "—")}
+              phaseLabel={isLoading ? "…" : (viewModel?.phaseLabel ?? "—")}
+            />
+            <MetricCard
+              variant="xp"
+              icon={Activity}
+              eyebrow="XP y constancia"
+              xpTotal={isLoading ? 0 : (viewModel?.xpTotal ?? 0)}
+              weeklyGain={isLoading ? 0 : (viewModel?.weeklyGain ?? 0)}
+              consistencyStatus={isLoading ? "…" : (viewModel?.consistencyStatus ?? "—")}
+            />
+            <QuoteCard quote={DAILY_QUOTE} />
+          </DashboardGrid>
+        )}
 
         <DashboardGrid>
           <div className="lg:col-span-6">
