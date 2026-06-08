@@ -32,6 +32,12 @@ skills:
     scope: project
     path: .agents/skills/gmusic-edu-gamified-design
 
+  - name: gmusic-learning-engine
+    description: Motor de aprendizaje — backend, Prisma, microejercicios, progreso, XP, rachas y apoderados
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-learning-engine
+
   # ── Externos (no versionados; sync desde Codex global) ──
   - name: openai-docs
     description: Documentación oficial OpenAI + manual Codex (MCP developers.openai.com)

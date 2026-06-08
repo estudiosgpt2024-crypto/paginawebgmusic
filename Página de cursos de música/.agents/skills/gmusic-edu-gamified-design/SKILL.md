@@ -26,6 +26,8 @@ Leer primero:
 
 Gmusic no debe verse como clon de Duolingo. Capturar patrones de producto: progreso claro, motivacion, botones tactiles, feedback inmediato y recompensas. No copiar Duo, el logo, personajes, ilustraciones propietarias, tipografias propietarias ni composiciones exactas.
 
+Regla madre: cinematica premium primero; gamificacion como interaccion, no como disfraz visual.
+
 ## Direccion Visual
 
 - Mantener base premium: carbon, dorado, fotografia/textura musical y jerarquia elegante.
@@ -37,6 +39,9 @@ Gmusic no debe verse como clon de Duolingo. Capturar patrones de producto: progr
 
 - Usar tokens existentes antes de hardcodear colores.
 - Si hacen falta tokens gamificados, agregarlos a `design-system/tokens.css` con prefijo `--edu-*`.
+- En `Mi Estudio`, consolidar primero el layout: `DashboardShell`, `DashboardSection`, `DashboardGrid`, contenedor `1280px`, 12 columnas desktop y 1 columna mobile.
+- No aplicar textura de fondo, LED, celebracion de cofre, boton chunky ni estados esteticos avanzados antes de validar la grilla base.
+- Distribucion base de `Mi Estudio`: hero 12 columnas, proxima practica 12 columnas, metricas `4 + 4 + 4`, bloqueados `6 + 6`.
 - Mantener mobile primero: nodos, botones y labels no deben solaparse.
 - Toda accion importante debe tener estado hover, focus, active, disabled y loading cuando aplique.
 - No usar texto visible para explicar obviedades de la UI; mostrar estado con componente, icono y copy breve.

@@ -11,6 +11,7 @@ Fuente de verdad: **`.agents/skills/`**
 | `gmusic-welcome` | Mi Estudio, `GmusicWelcome.tsx` |
 | `gmusic-path` | Mi Camino, `GmusicPath.tsx` |
 | `gmusic-edu-gamified-design` | Diseño gamificado de cursos, progreso, XP, racha y estilo tipo Duolingo adaptado a Gmusic |
+| `gmusic-learning-engine` | Backend/motor de aprendizaje, microejercicios, Prisma, XP, rachas y apoderados |
 
 Registro completo: `skills.manifest.yaml`
 
@@ -38,3 +39,4 @@ Convención de nombre: carpeta = `name:` en frontmatter = kebab-case (`gmusic-we
 - Etapas por scope: no mezclar funcionalidad futura en la etapa activa.
 - Datos mock centralizados en `src/app/data/mock-user.ts`.
 - Para UI gamificada, usar `DESIGN.md` y el skill `gmusic-edu-gamified-design`; inspirarse en patrones tipo Duolingo sin copiar marca, mascota ni assets protegidos.
+- Para backend, progreso, microejercicios, XP, rachas o apoderados, usar `docs/architecture/learning-engine.md`, `docs/architecture/database-schema.md` y el skill `gmusic-learning-engine`.

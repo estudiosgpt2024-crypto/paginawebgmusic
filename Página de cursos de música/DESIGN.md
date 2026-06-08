@@ -4,6 +4,8 @@
 
 Gmusic debe sentirse como una academia de guitarra premium con energia de app de aprendizaje gamificado: claro, motivante, tactil y progresivo. La referencia de categoria es Duolingo por sus patrones de motivacion, no por su identidad visual. No copiar logos, mascota, personajes, ilustraciones propietarias ni layouts exactos.
 
+Regla madre: cinematica premium primero; gamificacion como interaccion, no como disfraz visual.
+
 ## Personalidad Visual
 
 - Premium musical: carbon, dorado, fotografia o textura real de guitarra.
@@ -40,6 +42,23 @@ Regla de uso: el dorado sigue siendo la marca premium; el verde gamificado se re
 - Evitar texto gigante dentro de cards compactas. Los paneles de alumno deben ser densos, claros y escaneables.
 
 ## Componentes
+
+## Layout de Dashboard
+
+La pantalla `Mi Estudio` debe respetar siempre esta base antes de cualquier capa estetica:
+
+- Contenedor unico centrado: `max-width: 1280px`.
+- Padding lateral consistente: compacto en mobile, estable en desktop.
+- Grilla desktop: 12 columnas.
+- Grilla mobile: 1 columna.
+- No improvisar distribuciones fuera de la grilla base.
+- Orden visual recomendado:
+  1. Hero compacto o panel de bienvenida en 12 columnas.
+  2. Proxima practica en 12 columnas o composicion validada.
+  3. Metricas en `4 + 4 + 4`.
+  4. Cards bloqueadas en `6 + 6`.
+
+No usar textura de fondo, LED, celebracion de cofre ni efectos de boton hasta que la grilla este estable.
 
 ### Botones
 
