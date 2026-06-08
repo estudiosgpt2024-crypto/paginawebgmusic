@@ -15,3 +15,6 @@ paginawebgmusic/
 
 # Lockfile generated locally by npm install
 package-lock.json
+
+# Cursor IDE (local skill symlinks)
+.cursor/
