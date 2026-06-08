@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { GmusicInternalHeader } from "../components/gmusic/GmusicInternalHeader";
+import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../components/gmusic/GmusicInternalHeader";
 import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
 import { PathPageIntro } from "../components/gmusic/path/PathPageIntro";
 import { SerpentinePathMap } from "../components/gmusic/path/SerpentinePathMap";
@@ -10,16 +10,13 @@ interface GmusicPathProps {
   setPage: (page: string) => void;
 }
 
-type ModalKind = "lesson" | "leveling" | "stage" | null;
+type ModalKind = "lesson" | "leveling" | "locked" | null;
 
 export function GmusicPath({ setPage }: GmusicPathProps) {
   const [modal, setModal] = useState<ModalKind>(null);
-  const [stageLabel, setStageLabel] = useState("");
 
-  const openStagePlaceholder = useCallback((stage: string) => {
-    setStageLabel(stage);
-    setModal("stage");
-    setTimeout(() => setModal(null), 2500);
+  const openNavPlaceholder = useCallback((key: string) => {
+    if (isLockedNav(key)) setModal("locked");
   }, []);
 
   const modalProps = () => {
@@ -34,10 +31,11 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
           title: "Próximamente — evaluación de módulo",
           subtitle: "Esta prueba estará disponible cuando activemos la validación interactiva.",
         };
-      case "stage":
+      case "locked":
         return {
-          title: "Próximamente",
-          stage: stageLabel,
+          title: LOCKED_NAV_MODAL.title,
+          subtitle: LOCKED_NAV_MODAL.subtitle,
+          footer: LOCKED_NAV_MODAL.footer,
         };
       default:
         return { title: "" };
@@ -51,7 +49,7 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
       <GmusicInternalHeader
         activeNav="camino"
         setPage={setPage}
-        onPlaceholder={openStagePlaceholder}
+        onPlaceholder={openNavPlaceholder}
       />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 lg:py-12">
@@ -83,7 +81,7 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
         onClose={() => setModal(null)}
         title={mp.title}
         subtitle={mp.subtitle}
-        stage={mp.stage}
+        footer={mp.footer}
       />
     </div>
   );
