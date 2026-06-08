@@ -1,3 +1,4 @@
+import { useEffect, useId } from "react";
 import { Lock } from "lucide-react";
 import { GM_GOLD, GM_TEXT, GM_TEXT_SEC } from "./tokens";
 
@@ -18,6 +19,19 @@ export function GmusicPlaceholderModal({
   stage,
   footer = "Continúa en tu camino actual mientras trabajamos en nuevas funcionalidades.",
 }: GmusicPlaceholderModalProps) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
@@ -27,6 +41,9 @@ export function GmusicPlaceholderModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="rounded-lg p-8 border-2 max-w-md mx-4 text-center"
         style={{
           background: "linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%)",
@@ -36,9 +53,9 @@ export function GmusicPlaceholderModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4">
-          <Lock className="w-12 h-12 mx-auto" style={{ color: GM_GOLD }} />
+          <Lock className="w-12 h-12 mx-auto" aria-hidden="true" style={{ color: GM_GOLD }} />
         </div>
-        <h3 className="text-2xl font-semibold mb-2" style={{ color: GM_GOLD }}>
+        <h3 id={titleId} className="text-2xl font-semibold mb-2" style={{ color: GM_GOLD }}>
           {title}
         </h3>
         {subtitle && (

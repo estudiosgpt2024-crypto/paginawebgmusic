@@ -66,10 +66,12 @@ model GuardianLink {
   studentId  String
   createdAt  DateTime @default(now())
 
-  guardian User @relation("GuardianToStudent", fields: [guardianId], references: [id])
-  student  User @relation("StudentToGuardian", fields: [studentId], references: [id])
+  guardian User @relation("GuardianToStudent", fields: [guardianId], references: [id], onDelete: Cascade)
+  student  User @relation("StudentToGuardian", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([guardianId, studentId])
+  @@index([guardianId])
+  @@index([studentId])
 }
 
 model Subscription {
@@ -81,7 +83,9 @@ model Subscription {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Course {
@@ -106,10 +110,11 @@ model Module {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  course Course     @relation(fields: [courseId], references: [id])
+  course Course     @relation(fields: [courseId], references: [id], onDelete: Restrict)
   nodes  PathNode[]
 
   @@unique([courseId, order])
+  @@index([courseId])
 }
 
 model PathNode {
@@ -124,9 +129,10 @@ model PathNode {
   exercises MicroExercise[]
   progress  UserProgress[]
   sessions  LessonSession[]
-  module    Module          @relation(fields: [moduleId], references: [id])
+  module    Module          @relation(fields: [moduleId], references: [id], onDelete: Restrict)
 
   @@unique([moduleId, order])
+  @@index([moduleId])
 }
 
 model MicroExercise {
@@ -142,9 +148,10 @@ model MicroExercise {
   updatedAt      DateTime     @updatedAt
 
   attempts ExerciseAttempt[]
-  node     PathNode          @relation(fields: [nodeId], references: [id])
+  node     PathNode          @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([nodeId, order])
+  @@index([nodeId])
 }
 
 model LessonSession {
@@ -159,9 +166,13 @@ model LessonSession {
   completedAt   DateTime?
 
   attempts ExerciseAttempt[]
-  user     User              @relation(fields: [userId], references: [id])
-  node     PathNode          @relation(fields: [nodeId], references: [id])
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node     PathNode          @relation(fields: [nodeId], references: [id], onDelete: Restrict)
   xpEvents XpEvent[]
+
+  @@index([userId])
+  @@index([nodeId])
+  @@index([userId, status])
 }
 
 model ExerciseAttempt {
@@ -173,10 +184,12 @@ model ExerciseAttempt {
   responseTimeMs  Int
   createdAt       DateTime @default(now())
 
-  session  LessonSession @relation(fields: [sessionId], references: [id])
-  exercise MicroExercise @relation(fields: [microExerciseId], references: [id])
+  session  LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise MicroExercise @relation(fields: [microExerciseId], references: [id], onDelete: Restrict)
 
   @@unique([sessionId, microExerciseId])
+  @@index([sessionId])
+  @@index([microExerciseId])
 }
 
 model UserProgress {
@@ -187,10 +200,12 @@ model UserProgress {
   unlockedAt  DateTime  @default(now())
   completedAt DateTime?
 
-  user User     @relation(fields: [userId], references: [id])
-  node PathNode @relation(fields: [nodeId], references: [id])
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node PathNode @relation(fields: [nodeId], references: [id], onDelete: Restrict)
 
   @@unique([userId, nodeId])
+  @@index([userId])
+  @@index([nodeId])
 }
 
 model XpEvent {
@@ -201,10 +216,12 @@ model XpEvent {
   reason    String
   createdAt DateTime @default(now())
 
-  user    User           @relation(fields: [userId], references: [id])
-  session LessonSession? @relation(fields: [sessionId], references: [id])
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session LessonSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, reason])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model StreakEvent {
@@ -214,7 +231,8 @@ model StreakEvent {
   eventDate     String // YYYY-MM-DD en timezone del alumno.
   createdAt     DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventDate])
+  @@index([userId])
 }

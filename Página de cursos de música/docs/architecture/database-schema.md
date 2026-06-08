@@ -15,6 +15,14 @@ No estamos copiando Duolingo visualmente; estamos construyendo un motor de habit
 - Los eventos criticos deben ser idempotentes para evitar doble suma de XP o rachas.
 - El modelo debe soportar web primero y mobile/PWA despues.
 
+## Integridad referencial e índices
+
+- **onDelete: Cascade** — registros del alumno (`LessonSession`, `UserProgress`, `XpEvent`, `StreakEvent`, `Subscription`, `GuardianLink`) cuando se elimina el `User`.
+- **onDelete: Restrict** — contenido pedagógico y nodos referenciados por sesiones o progreso (`Module` → `Course`, `PathNode` → `Module`, `LessonSession` → `PathNode`, etc.) para evitar borrados accidentales con historial activo.
+- **onDelete: SetNull** — `XpEvent.sessionId` opcional si la sesión se elimina en mantenimiento.
+- **onDelete: Cascade** — `MicroExercise` y `ExerciseAttempt` hijos directos de nodo/sesión respectivamente.
+- **@@index** — FKs de consulta frecuente (`userId`, `nodeId`, `sessionId`, `courseId`, `moduleId`) y compuesto `LessonSession(userId, status)`.
+
 ## Prisma Schema Base
 
 ```prisma
@@ -82,10 +90,12 @@ model GuardianLink {
   studentId  String
   createdAt  DateTime @default(now())
 
-  guardian   User     @relation("GuardianToStudent", fields: [guardianId], references: [id])
-  student    User     @relation("StudentToGuardian", fields: [studentId], references: [id])
+  guardian User @relation("GuardianToStudent", fields: [guardianId], references: [id], onDelete: Cascade)
+  student  User @relation("StudentToGuardian", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([guardianId, studentId])
+  @@index([guardianId])
+  @@index([studentId])
 }
 
 model Subscription {
@@ -97,7 +107,9 @@ model Subscription {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
-  user      User               @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Course {
@@ -110,7 +122,7 @@ model Course {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  modules     Module[]
+  modules Module[]
 }
 
 model Module {
@@ -122,10 +134,11 @@ model Module {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  course    Course        @relation(fields: [courseId], references: [id])
-  nodes     PathNode[]
+  course Course     @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  nodes  PathNode[]
 
   @@unique([courseId, order])
+  @@index([courseId])
 }
 
 model PathNode {
@@ -140,99 +153,112 @@ model PathNode {
   exercises MicroExercise[]
   progress  UserProgress[]
   sessions  LessonSession[]
-  module    Module        @relation(fields: [moduleId], references: [id])
+  module    Module          @relation(fields: [moduleId], references: [id], onDelete: Restrict)
 
   @@unique([moduleId, order])
+  @@index([moduleId])
 }
 
 model MicroExercise {
-  id             String            @id @default(uuid())
+  id             String       @id @default(uuid())
   nodeId         String
   type           ExerciseType
   difficulty     Int
   instruction    String
-  contentPayload Json              // Opciones, audios e imagenes. No contiene la respuesta.
-  secureAnswer   Json              // Solucion privada para validacion backend.
+  contentPayload Json
+  secureAnswer   Json
   order          Int
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  attempts       ExerciseAttempt[]
-  node           PathNode          @relation(fields: [nodeId], references: [id])
+  attempts ExerciseAttempt[]
+  node     PathNode          @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([nodeId, order])
+  @@index([nodeId])
 }
 
 model LessonSession {
-  id            String          @id @default(uuid())
+  id            String        @id @default(uuid())
   userId        String
   nodeId        String
-  status        SessionStatus   @default(STARTED)
+  status        SessionStatus @default(STARTED)
   accuracy      Float?
-  xpEarned      Int             @default(0)
-  streakUpdated Boolean         @default(false)
-  startedAt     DateTime        @default(now())
+  xpEarned      Int           @default(0)
+  streakUpdated Boolean       @default(false)
+  startedAt     DateTime      @default(now())
   completedAt   DateTime?
 
-  attempts      ExerciseAttempt[]
-  user          User            @relation(fields: [userId], references: [id])
-  node          PathNode        @relation(fields: [nodeId], references: [id])
-  xpEvents      XpEvent[]
+  attempts ExerciseAttempt[]
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node     PathNode          @relation(fields: [nodeId], references: [id], onDelete: Restrict)
+  xpEvents XpEvent[]
+
+  @@index([userId])
+  @@index([nodeId])
+  @@index([userId, status])
 }
 
 model ExerciseAttempt {
-  id              String        @id @default(uuid())
+  id              String   @id @default(uuid())
   sessionId       String
   microExerciseId String
   isCorrect       Boolean
   selectedAnswer  String
   responseTimeMs  Int
-  createdAt       DateTime      @default(now())
+  createdAt       DateTime @default(now())
 
-  session         LessonSession @relation(fields: [sessionId], references: [id])
-  exercise        MicroExercise @relation(fields: [microExerciseId], references: [id])
+  session  LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise MicroExercise @relation(fields: [microExerciseId], references: [id], onDelete: Restrict)
 
   @@unique([sessionId, microExerciseId])
+  @@index([sessionId])
+  @@index([microExerciseId])
 }
 
 model UserProgress {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
   nodeId      String
-  isCompleted Boolean  @default(false)
-  unlockedAt  DateTime @default(now())
+  isCompleted Boolean   @default(false)
+  unlockedAt  DateTime  @default(now())
   completedAt DateTime?
 
-  user        User     @relation(fields: [userId], references: [id])
-  node        PathNode @relation(fields: [nodeId], references: [id])
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node PathNode @relation(fields: [nodeId], references: [id], onDelete: Restrict)
 
   @@unique([userId, nodeId])
+  @@index([userId])
+  @@index([nodeId])
 }
 
 model XpEvent {
-  id        String         @id @default(uuid())
+  id        String   @id @default(uuid())
   userId    String
   sessionId String?
   amount    Int
   reason    String
-  createdAt DateTime       @default(now())
+  createdAt DateTime @default(now())
 
-  user      User           @relation(fields: [userId], references: [id])
-  session   LessonSession? @relation(fields: [sessionId], references: [id])
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session LessonSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, reason])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model StreakEvent {
   id            String   @id @default(uuid())
   userId        String
   currentStreak Int
-  eventDate     String   // YYYY-MM-DD en timezone del alumno.
+  eventDate     String
   createdAt     DateTime @default(now())
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventDate])
+  @@index([userId])
 }
 ```
 
@@ -245,3 +271,5 @@ model StreakEvent {
 - `@@unique([sessionId, reason])` en `XpEvent` evita doble XP por la misma sesion y razon.
 - La relacion apoderado-alumno se valida con `GuardianLink`.
 - Los estados `DRAFT`, `PUBLISHED` y `ARCHIVED` permiten preparar contenido sin publicarlo.
+- `onDelete` explicito en todas las relaciones FK; ver seccion **Integridad referencial e indices**.
+- Indices `@@index` en FKs de consulta frecuente y en `LessonSession(userId, status)`.
