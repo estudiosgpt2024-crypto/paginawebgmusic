@@ -30,6 +30,18 @@
   /* ── Acento mínimo (no protagonista) ────────── */
   --blue-accent:    #4A6FA5;
 
+  /* ── Gamificación educativa (apoyo, no marca) ─ */
+  --edu-success:          #58CC02;  /* Progreso, completado, continuar práctica */
+  --edu-success-hover:    #49AD00;
+  --edu-success-shadow:   #3F9700;
+  --edu-info:             #1CB0F6;  /* Tips, info, progreso secundario */
+  --edu-error:            #FF4B4B;  /* Error recuperable */
+  --edu-warning:          #FFC800;  /* Avisos, metas */
+  --edu-reward:           #FF9600;  /* XP, cofres, recompensas */
+  --edu-achievement:      #CE82FF;  /* Badges, logros */
+  --edu-locked:           rgba(255, 255, 255, 0.28);
+  --edu-surface-light:    #F7F7F7;
+
   /* ── Grid ───────────────────────────────────── */
   --max-width:      1280px;
   --padding-x:      80px;

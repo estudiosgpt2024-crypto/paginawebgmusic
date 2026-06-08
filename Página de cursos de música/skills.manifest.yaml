@@ -1,0 +1,65 @@
+# Registro unificado de skills — Gmusic Estudio
+# Fuente de verdad: .agents/skills/
+# Sincronizar: ./scripts/sync-skills.sh [--global]
+
+version: 1
+canonical_path: .agents/skills
+
+naming:
+  rule: "Carpeta = frontmatter name = kebab-case. Skills propios con prefijo gmusic-."
+  examples:
+    - gmusic-welcome
+    - gmusic-path
+    - openai-docs
+
+skills:
+  # ── Proyecto Gmusic (versionados en git) ──
+  - name: gmusic-welcome
+    description: Mi Estudio — dashboard premium, hero, próxima práctica, métricas
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-welcome
+
+  - name: gmusic-path
+    description: Mi Camino — ruta pedagógica, mapa serpenteante, header interno
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-path
+
+  - name: gmusic-edu-gamified-design
+    description: Diseño de cursos gamificados tipo Duolingo, adaptado a Gmusic sin copiar marca
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-edu-gamified-design
+
+  # ── Externos (no versionados; sync desde Codex global) ──
+  - name: openai-docs
+    description: Documentación oficial OpenAI + manual Codex (MCP developers.openai.com)
+    tools: [codex, cursor]
+    scope: external
+    source: ~/.codex/skills/.system/openai-docs
+    sync_global: false
+
+  - name: figma
+    description: Figma MCP — design-to-code e implementación
+    tools: [codex, cursor]
+    scope: external
+    source: ~/.codex/skills/figma
+    sync_global: false
+
+  - name: vercel-deploy
+    description: Deploy a Vercel
+    tools: [codex, cursor]
+    scope: external
+    source: ~/.codex/skills/vercel-deploy
+    sync_global: false
+
+tool_paths:
+  cursor:
+    project: .cursor/skills
+    user: ~/.cursor/skills
+  codex:
+    global: ~/.codex/skills
+    project: .agents/skills
+  antigravity:
+    global: ~/.gemini/skills

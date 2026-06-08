@@ -1,4 +1,20 @@
-**Add your own guidelines here**
+# Gmusic Estudio — Guidelines
+
+## Diseño
+
+- Usar `DESIGN.md` como guía visual local para decisiones de color, tipografía, componentes y gamificación.
+- Mantener la identidad premium de Gmusic: carbón, dorado, música, guitarra y jerarquía elegante.
+- Para pantallas tipo curso, ruta, práctica, XP, racha o progreso, usar el skill `gmusic-edu-gamified-design`.
+- Inspirarse en patrones tipo Duolingo solo a nivel de producto: progreso claro, recompensas, feedback rápido y botones táctiles. No copiar marca, mascota, personajes ni assets protegidos.
+- Usar `design-system/tokens.css` antes de hardcodear colores o espaciados.
+- Evitar interfaces infantiles; la experiencia debe sentirse motivante y seria.
+
+## Implementación
+
+- Preferir cambios pequeños por pantalla o scope.
+- No mezclar rediseños de `GmusicWelcome` y `GmusicPath` salvo que el usuario lo pida.
+- Mantener estados hover, focus, active, disabled y loading en controles importantes.
+- Verificar mobile y desktop cuando se modifique UI.
 <!--
 
 System Guidelines
