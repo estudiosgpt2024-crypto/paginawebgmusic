@@ -98,8 +98,7 @@ El servidor debe devolver contenido sin respuesta correcta.
           { "id": "b", "text": "5a cuerda (La)" },
           { "id": "c", "text": "6a cuerda (Mi grave)" },
           { "id": "d", "text": "4a cuerda (Re)" }
-        ],
-        "explanationAfterAnswer": "La 6a cuerda es la mas gruesa de la guitarra y produce la nota Mi mas grave."
+        ]
       }
     }
   ]

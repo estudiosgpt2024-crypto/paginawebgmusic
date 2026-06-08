@@ -1,7 +1,7 @@
 # Gmusic Learning Engine — API Contract (MVP)
 
 Contrato REST v1 para el motor de aprendizaje.  
-**Estado:** Fase 3B.1 — lectura (`health`, `me/dashboard`, `me/path`) y creación de sesiones (`POST /lesson-sessions`) implementadas. Pendientes: cierre de sesión (`POST /lesson-sessions/:id/complete`) y apoderados.
+**Estado:** Fase 3B.2 — lectura (`health`, `me/dashboard`, `me/path`), creación (`POST /lesson-sessions`) y cierre (`POST /lesson-sessions/:id/complete`) implementados. Pendientes: apoderados.
 
 Referencias: `learning-engine.md`, `database-schema.md`, `backend-provider-options.md`.
 
@@ -316,21 +316,24 @@ Cierra la sesión. Valida intentos, persiste `ExerciseAttempt`, actualiza XP, ra
 
 **Lógica servidor (resumen)**
 
-1. Verificar `session.userId === auth.userId`.
-2. Si `status === COMPLETED` → devolver snapshot sin re-procesar.
-3. Si ventana > 3h → `ABANDONED` + error `SESSION_EXPIRED`.
-4. Comparar cada `selectedAnswer` con `MicroExercise.secureAnswer`.
-5. `accuracy = correctos / total ejercicios del nodo`.
-6. Si `accuracy >= 0.7` → marcar `UserProgress.isCompleted`.
-7. Si `accuracy >= 0.7` y no hay `StreakEvent` hoy (timezone alumno) → crear/actualizar racha.
-8. Crear `XpEvent` con `reason: SESSION_COMPLETED` (único por sesión).
-9. Actualizar `LessonSession` → `COMPLETED`.
+1. Advisory lock transaccional por `sessionId` (idempotencia bajo concurrencia).
+2. Verificar `session.userId === auth.userId`.
+3. Si `status === COMPLETED` → devolver snapshot sin re-procesar (`alreadyProcessed: true`, sin `attemptsSummary`).
+4. Si ventana > 3h → `ABANDONED` + error `SESSION_EXPIRED`.
+5. Si `status !== STARTED` → `SESSION_NOT_STARTABLE`.
+6. Comparar cada `selectedAnswer` con `MicroExercise.secureAnswer` (solo servidor).
+7. `accuracy = correctos / total ejercicios del nodo`.
+8. Si `accuracy >= 0.7` → marcar `UserProgress.isCompleted`.
+9. Si `accuracy >= 0.7` y no hay `StreakEvent` hoy (timezone alumno) → crear/continuar racha (ayer +1 o 1).
+10. Crear `XpEvent` con `reason: SESSION_COMPLETED` (único por sesión).
+11. Actualizar `LessonSession` → `COMPLETED`.
 
 **Errores**
 
 | HTTP | `error.code` | Cuándo |
 |------|--------------|--------|
 | 400 | `INVALID_ATTEMPT` | Ejercicio no pertenece al nodo/sesión |
+| 400 | `VALIDATION_ERROR` | Body/`attempts` inválido, campos prohibidos o `microExerciseId` duplicado |
 | 401 | `UNAUTHORIZED` | — |
 | 403 | `FORBIDDEN` | Sesión de otro usuario |
 | 404 | `SESSION_NOT_FOUND` | — |
@@ -442,7 +445,7 @@ Reporte de actividad de un alumno. **Requiere** `GuardianLink` entre apoderado y
 
 ## Implementación mock (sin DB)
 
-**Obsoleto para Fase 3A+.** Los endpoints `GET /me/dashboard`, `GET /me/path` y `POST /lesson-sessions` leen/escriben PostgreSQL vía Prisma. Pendiente: `POST /lesson-sessions/:id/complete` y apoderados.
+**Obsoleto para Fase 3A+.** Los endpoints `GET /me/dashboard`, `GET /me/path`, `POST /lesson-sessions` y `POST /lesson-sessions/:id/complete` leen/escriben PostgreSQL vía Prisma. Pendiente: apoderados.
 
 ---
 

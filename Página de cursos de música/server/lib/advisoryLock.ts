@@ -1,12 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 /**
- * Bloqueo transaccional por alumno+nodo.
- *
- * Peticiones concurrentes a POST /lesson-sessions pueden intercalar lecturas
- * antes de que exista la fila STARTED recién creada y terminar insertando
- * duplicados. pg_advisory_xact_lock serializa la sección crítica dentro de la
- * transacción; se libera automáticamente al commit o rollback.
+ * Bloqueo transaccional por alumno+nodo al crear/reutilizar sesiones.
  */
 export async function acquireLessonSessionAdvisoryLock(
   tx: Prisma.TransactionClient,
@@ -15,5 +10,18 @@ export async function acquireLessonSessionAdvisoryLock(
 ): Promise<void> {
   await tx.$executeRaw(
     Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${userId}), hashtext(${nodeId}))`
+  );
+}
+
+/**
+ * Bloqueo transaccional por sessionId al cerrar sesiones.
+ * Serializa complete concurrentes para garantizar idempotencia.
+ */
+export async function acquireSessionCompleteAdvisoryLock(
+  tx: Prisma.TransactionClient,
+  sessionId: string
+): Promise<void> {
+  await tx.$executeRaw(
+    Prisma.sql`SELECT pg_advisory_xact_lock(hashtext('lesson-session-complete'), hashtext(${sessionId}))`
   );
 }

@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "api:dev": "tsx --env-file=.env server/index.ts",
     "api:typecheck": "tsc -p tsconfig.server.json --noEmit",
-    "api:test": "node --env-file-if-exists=.env --import tsx --test server/tests/**/*.test.ts"
+    "api:test": "node --env-file-if-exists=.env --import tsx --test --test-concurrency=1 server/tests/**/*.test.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

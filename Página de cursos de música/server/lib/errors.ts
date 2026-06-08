@@ -4,6 +4,10 @@ export type ApiErrorCode =
   | "COURSE_NOT_FOUND"
   | "VALIDATION_ERROR"
   | "INVALID_NODE"
+  | "INVALID_ATTEMPT"
+  | "SESSION_NOT_FOUND"
+  | "SESSION_EXPIRED"
+  | "SESSION_NOT_STARTABLE"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

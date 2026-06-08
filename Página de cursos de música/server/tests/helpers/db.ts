@@ -1,9 +1,11 @@
-import { SessionStatus } from "@prisma/client";
+import { Role, SessionStatus } from "@prisma/client";
 import assert from "node:assert/strict";
 import { config } from "../../config.js";
 import { prisma } from "../../lib/prisma.js";
 import { loadPublishedCoursePath } from "../../services/coursePath.js";
 import type { PathNodeStatus } from "../../lib/nodeStatus.js";
+import { SESSION_TTL_MS } from "../../lib/sessionTtl.js";
+import { formatDateInTimezone, getYesterdayDateInTimezone } from "../../lib/timezone.js";
 
 export const hasDatabase = Boolean(process.env.DATABASE_URL);
 
@@ -168,3 +170,353 @@ export async function countStartedSessions(userId: string, nodeId: string) {
     },
   });
 }
+
+export interface LessonSessionSnapshot {
+  id: string;
+  userId: string;
+  nodeId: string;
+  status: SessionStatus;
+  accuracy: number | null;
+  xpEarned: number;
+  streakUpdated: boolean;
+  startedAt: Date;
+  completedAt: Date | null;
+}
+
+export interface ExerciseAttemptSnapshot {
+  id: string;
+  sessionId: string;
+  microExerciseId: string;
+  isCorrect: boolean;
+  selectedAnswer: string;
+  responseTimeMs: number;
+  createdAt: Date;
+}
+
+export interface StreakEventSnapshot {
+  id: string;
+  userId: string;
+  currentStreak: number;
+  eventDate: string;
+  createdAt: Date;
+}
+
+export interface XpEventSnapshot {
+  id: string;
+  userId: string;
+  sessionId: string | null;
+  amount: number;
+  reason: string;
+  createdAt: Date;
+}
+
+export interface CompleteTestDbSnapshot {
+  userProgress: UserProgressSnapshot;
+  lessonSessions: LessonSessionSnapshot[];
+  exerciseAttempts: ExerciseAttemptSnapshot[];
+  streakEvents: StreakEventSnapshot[];
+  xpEvents: XpEventSnapshot[];
+}
+
+export async function getNodeExercises(nodeId: string) {
+  return prisma.microExercise.findMany({
+    where: { nodeId },
+    select: {
+      id: true,
+      secureAnswer: true,
+      order: true,
+    },
+    orderBy: { order: "asc" },
+  });
+}
+
+export async function getOtherStudentUserId(ownerStudentId: string) {
+  const other = await prisma.user.findFirst({
+    where: {
+      role: Role.STUDENT,
+      id: { not: ownerStudentId },
+    },
+    select: { id: true },
+  });
+
+  if (other) {
+    return other.id;
+  }
+
+  const guardian = await prisma.user.findFirst({
+    where: { role: Role.GUARDIAN },
+    select: { id: true },
+  });
+
+  return guardian?.id ?? null;
+}
+
+export async function createStartedSession(userId: string, nodeId: string) {
+  return prisma.lessonSession.create({
+    data: {
+      userId,
+      nodeId,
+      status: SessionStatus.STARTED,
+    },
+  });
+}
+
+export async function captureCompleteTestDbSnapshot(
+  userId: string,
+  nodeId: string
+): Promise<CompleteTestDbSnapshot> {
+  const lessonSessions = await prisma.lessonSession.findMany({
+    where: { userId, nodeId },
+    orderBy: { startedAt: "asc" },
+  });
+
+  const sessionIds = lessonSessions.map((session) => session.id);
+
+  const [userProgress, exerciseAttempts, streakEvents, xpEvents] = await Promise.all([
+    captureUserProgressSnapshot(userId, nodeId),
+    sessionIds.length > 0
+      ? prisma.exerciseAttempt.findMany({
+          where: { sessionId: { in: sessionIds } },
+          orderBy: [{ sessionId: "asc" }, { createdAt: "asc" }],
+        })
+      : Promise.resolve([]),
+    prisma.streakEvent.findMany({
+      where: { userId },
+      orderBy: { eventDate: "asc" },
+    }),
+    prisma.xpEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  return {
+    userProgress,
+    lessonSessions: lessonSessions.map((session) => ({
+      id: session.id,
+      userId: session.userId,
+      nodeId: session.nodeId,
+      status: session.status,
+      accuracy: session.accuracy,
+      xpEarned: session.xpEarned,
+      streakUpdated: session.streakUpdated,
+      startedAt: session.startedAt,
+      completedAt: session.completedAt,
+    })),
+    exerciseAttempts: exerciseAttempts.map((attempt) => ({
+      id: attempt.id,
+      sessionId: attempt.sessionId,
+      microExerciseId: attempt.microExerciseId,
+      isCorrect: attempt.isCorrect,
+      selectedAnswer: attempt.selectedAnswer,
+      responseTimeMs: attempt.responseTimeMs,
+      createdAt: attempt.createdAt,
+    })),
+    streakEvents: streakEvents.map((event) => ({
+      id: event.id,
+      userId: event.userId,
+      currentStreak: event.currentStreak,
+      eventDate: event.eventDate,
+      createdAt: event.createdAt,
+    })),
+    xpEvents: xpEvents.map((event) => ({
+      id: event.id,
+      userId: event.userId,
+      sessionId: event.sessionId,
+      amount: event.amount,
+      reason: event.reason,
+      createdAt: event.createdAt,
+    })),
+  };
+}
+
+export async function restoreCompleteTestDbSnapshot(
+  userId: string,
+  nodeId: string,
+  snapshot: CompleteTestDbSnapshot
+): Promise<void> {
+  const existingSessions = await prisma.lessonSession.findMany({
+    where: { userId, nodeId },
+    select: { id: true },
+  });
+  const existingSessionIds = existingSessions.map((session) => session.id);
+
+  if (existingSessionIds.length > 0) {
+    await prisma.exerciseAttempt.deleteMany({
+      where: { sessionId: { in: existingSessionIds } },
+    });
+  }
+
+  await prisma.xpEvent.deleteMany({ where: { userId } });
+  await prisma.lessonSession.deleteMany({ where: { userId, nodeId } });
+
+  await restoreUserProgressSnapshot(userId, nodeId, snapshot.userProgress);
+
+  if (snapshot.lessonSessions.length > 0) {
+    await prisma.lessonSession.createMany({
+      data: snapshot.lessonSessions.map((session) => ({
+        id: session.id,
+        userId: session.userId,
+        nodeId: session.nodeId,
+        status: session.status,
+        accuracy: session.accuracy,
+        xpEarned: session.xpEarned,
+        streakUpdated: session.streakUpdated,
+        startedAt: session.startedAt,
+        completedAt: session.completedAt,
+      })),
+    });
+  }
+
+  if (snapshot.exerciseAttempts.length > 0) {
+    await prisma.exerciseAttempt.createMany({
+      data: snapshot.exerciseAttempts.map((attempt) => ({
+        id: attempt.id,
+        sessionId: attempt.sessionId,
+        microExerciseId: attempt.microExerciseId,
+        isCorrect: attempt.isCorrect,
+        selectedAnswer: attempt.selectedAnswer,
+        responseTimeMs: attempt.responseTimeMs,
+        createdAt: attempt.createdAt,
+      })),
+    });
+  }
+
+  await prisma.streakEvent.deleteMany({ where: { userId } });
+  if (snapshot.streakEvents.length > 0) {
+    await prisma.streakEvent.createMany({
+      data: snapshot.streakEvents.map((event) => ({
+        id: event.id,
+        userId: event.userId,
+        currentStreak: event.currentStreak,
+        eventDate: event.eventDate,
+        createdAt: event.createdAt,
+      })),
+    });
+  }
+
+  if (snapshot.xpEvents.length > 0) {
+    await prisma.xpEvent.createMany({
+      data: snapshot.xpEvents.map((event) => ({
+        id: event.id,
+        userId: event.userId,
+        sessionId: event.sessionId,
+        amount: event.amount,
+        reason: event.reason,
+        createdAt: event.createdAt,
+      })),
+    });
+  }
+}
+
+export function assertCompleteTestDbSnapshotsEqual(
+  current: CompleteTestDbSnapshot,
+  expected: CompleteTestDbSnapshot
+): void {
+  assertUserProgressSnapshotsEqual(current.userProgress, expected.userProgress);
+  assert.equal(current.lessonSessions.length, expected.lessonSessions.length);
+  assert.equal(current.exerciseAttempts.length, expected.exerciseAttempts.length);
+  assert.equal(current.streakEvents.length, expected.streakEvents.length);
+  assert.equal(current.xpEvents.length, expected.xpEvents.length);
+
+  for (let index = 0; index < expected.lessonSessions.length; index++) {
+    const currentSession = current.lessonSessions[index];
+    const expectedSession = expected.lessonSessions[index];
+    assert.equal(currentSession?.id, expectedSession?.id);
+    assert.equal(currentSession?.status, expectedSession?.status);
+    assert.equal(currentSession?.accuracy, expectedSession?.accuracy);
+    assert.equal(currentSession?.xpEarned, expectedSession?.xpEarned);
+    assert.equal(currentSession?.streakUpdated, expectedSession?.streakUpdated);
+    assert.equal(currentSession?.startedAt.toISOString(), expectedSession?.startedAt.toISOString());
+    assert.equal(
+      currentSession?.completedAt?.toISOString() ?? null,
+      expectedSession?.completedAt?.toISOString() ?? null
+    );
+  }
+
+  for (let index = 0; index < expected.exerciseAttempts.length; index++) {
+    const currentAttempt = current.exerciseAttempts[index];
+    const expectedAttempt = expected.exerciseAttempts[index];
+    assert.equal(currentAttempt?.id, expectedAttempt?.id);
+    assert.equal(currentAttempt?.sessionId, expectedAttempt?.sessionId);
+    assert.equal(currentAttempt?.microExerciseId, expectedAttempt?.microExerciseId);
+    assert.equal(currentAttempt?.isCorrect, expectedAttempt?.isCorrect);
+    assert.equal(currentAttempt?.selectedAnswer, expectedAttempt?.selectedAnswer);
+    assert.equal(currentAttempt?.responseTimeMs, expectedAttempt?.responseTimeMs);
+    assert.equal(currentAttempt?.createdAt.toISOString(), expectedAttempt?.createdAt.toISOString());
+  }
+
+  for (let index = 0; index < expected.streakEvents.length; index++) {
+    assert.equal(
+      current.streakEvents[index]?.eventDate,
+      expected.streakEvents[index]?.eventDate
+    );
+    assert.equal(
+      current.streakEvents[index]?.currentStreak,
+      expected.streakEvents[index]?.currentStreak
+    );
+  }
+
+  for (let index = 0; index < expected.xpEvents.length; index++) {
+    assert.equal(current.xpEvents[index]?.amount, expected.xpEvents[index]?.amount);
+    assert.equal(current.xpEvents[index]?.reason, expected.xpEvents[index]?.reason);
+    assert.equal(
+      current.xpEvents[index]?.sessionId ?? null,
+      expected.xpEvents[index]?.sessionId ?? null
+    );
+  }
+}
+
+export async function deleteStreakEventForDate(userId: string, eventDate: string) {
+  await prisma.streakEvent.deleteMany({
+    where: { userId, eventDate },
+  });
+}
+
+export async function seedYesterdayStreak(
+  userId: string,
+  timezone: string,
+  currentStreak: number
+) {
+  const yesterday = getYesterdayDateInTimezone(timezone);
+  await prisma.streakEvent.upsert({
+    where: {
+      userId_eventDate: {
+        userId,
+        eventDate: yesterday,
+      },
+    },
+    update: { currentStreak },
+    create: {
+      userId,
+      eventDate: yesterday,
+      currentStreak,
+    },
+  });
+}
+
+export async function countXpEventsForSession(sessionId: string) {
+  return prisma.xpEvent.count({
+    where: { sessionId, reason: "SESSION_COMPLETED" },
+  });
+}
+
+export async function countAttemptsForSession(sessionId: string) {
+  return prisma.exerciseAttempt.count({
+    where: { sessionId },
+  });
+}
+
+export async function getTodayStreak(userId: string, timezone: string) {
+  const today = formatDateInTimezone(new Date(), timezone);
+  return prisma.streakEvent.findUnique({
+    where: {
+      userId_eventDate: {
+        userId,
+        eventDate: today,
+      },
+    },
+  });
+}
+
+export { SESSION_TTL_MS };
