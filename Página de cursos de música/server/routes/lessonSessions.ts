@@ -1,0 +1,17 @@
+import { Router } from "express";
+import { assertStudent, devStudentAuth } from "../middleware/devStudentAuth.js";
+import { createOrReuseLessonSession } from "../services/lessonSessionService.js";
+
+export const lessonSessionsRouter = Router();
+
+lessonSessionsRouter.use(devStudentAuth);
+
+lessonSessionsRouter.post("/", async (req, res, next) => {
+  try {
+    const student = assertStudent(req);
+    const { payload, created } = await createOrReuseLessonSession(student, req.body);
+    res.status(created ? 201 : 200).json(payload);
+  } catch (error) {
+    next(error);
+  }
+});

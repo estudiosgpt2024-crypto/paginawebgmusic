@@ -1,7 +1,7 @@
 # Gmusic Learning Engine — API Contract (MVP)
 
 Contrato REST v1 para el motor de aprendizaje.  
-**Estado:** Fase 3A — backend Express con PostgreSQL real para endpoints de **solo lectura** (`health`, `me/dashboard`, `me/path`). Sesiones y apoderados pendientes.
+**Estado:** Fase 3B.1 — lectura (`health`, `me/dashboard`, `me/path`) y creación de sesiones (`POST /lesson-sessions`) implementadas. Pendientes: cierre de sesión (`POST /lesson-sessions/:id/complete`) y apoderados.
 
 Referencias: `learning-engine.md`, `database-schema.md`, `backend-provider-options.md`.
 
@@ -178,7 +178,7 @@ Camino pedagógico para **Mi Camino**. Módulos y nodos con estado calculado en 
 
 ### `POST /api/v1/lesson-sessions`
 
-Inicia una sesión de práctica en un nodo. Crea `LessonSession` con `status: STARTED`.
+Inicia o reutiliza una sesión de práctica en un nodo. Crea `LessonSession` con `status: STARTED` cuando no hay sesión activa válida.
 
 **Auth:** alumno.
 
@@ -194,7 +194,9 @@ Inicia una sesión de práctica en un nodo. Crea `LessonSession` con `status: ST
 |-------|------|-----------|
 | `nodeId` | UUID | Sí |
 
-**Response 201**
+**Response 201** — sesión nueva creada.
+
+**Response 200** — sesión `STARTED` existente reutilizada (mismo alumno, mismo nodo, iniciada hace menos de 3 horas).
 
 ```json
 {
@@ -227,16 +229,18 @@ Inicia una sesión de práctica en un nodo. Crea `LessonSession` con `status: ST
 **Reglas**
 
 - No incluir `secureAnswer`, `correctOptionId` ni explicaciones post-respuesta en payloads previos a responder.
-- El nodo debe estar `available` o `active` para el alumno.
-- Una sesión `STARTED` previa en el mismo nodo puede reutilizarse o rechazarse — implementación TBD; MVP mock: siempre crear nueva.
+- El nodo debe pertenecer al curso publicado configurado y estar `available` o `active` para el alumno.
+- Una sesión `STARTED` previa del mismo alumno/nodo con menos de 3 horas se **reutiliza** (200); no se duplica.
+- Sesiones `STARTED` vencidas (>3 h) del mismo alumno/nodo se marcan `ABANDONED` antes de crear una nueva (201).
+- Concurrencia: advisory lock transaccional PostgreSQL por alumno+nodo evita sesiones STARTED duplicadas en peticiones simultáneas.
 
 **Errores**
 
 | HTTP | `error.code` | Cuándo |
 |------|--------------|--------|
-| 400 | `INVALID_NODE` | Nodo inexistente o `locked` |
+| 400 | `VALIDATION_ERROR` | Body inválido o `nodeId` no UUID |
+| 400 | `INVALID_NODE` | Nodo inexistente, no publicado, `locked` o `completed` |
 | 401 | `UNAUTHORIZED` | — |
-| 409 | `SESSION_ALREADY_ACTIVE` | Opcional: ya hay sesión abierta en ventana válida |
 
 ---
 
@@ -438,7 +442,7 @@ Reporte de actividad de un alumno. **Requiere** `GuardianLink` entre apoderado y
 
 ## Implementación mock (sin DB)
 
-**Obsoleto para Fase 3A+.** Los endpoints `GET /me/dashboard` y `GET /me/path` leen PostgreSQL vía Prisma. Los POST de sesión pueden seguir en fixture hasta Fase 3B.
+**Obsoleto para Fase 3A+.** Los endpoints `GET /me/dashboard`, `GET /me/path` y `POST /lesson-sessions` leen/escriben PostgreSQL vía Prisma. Pendiente: `POST /lesson-sessions/:id/complete` y apoderados.
 
 ---
 

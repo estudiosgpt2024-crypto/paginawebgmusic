@@ -2,6 +2,8 @@ export type ApiErrorCode =
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "COURSE_NOT_FOUND"
+  | "VALIDATION_ERROR"
+  | "INVALID_NODE"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

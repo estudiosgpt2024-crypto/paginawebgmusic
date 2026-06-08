@@ -1,6 +1,7 @@
 import express from "express";
 import { ApiError, errorBody } from "./lib/errors.js";
 import { healthRouter } from "./routes/health.js";
+import { lessonSessionsRouter } from "./routes/lessonSessions.js";
 import { meRouter } from "./routes/me.js";
 
 export function createApp() {
@@ -20,6 +21,7 @@ export function createApp() {
 
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1/me", meRouter);
+  app.use("/api/v1/lesson-sessions", lessonSessionsRouter);
 
   app.use((_req, res) => {
     res.status(404).json(errorBody("INTERNAL_ERROR", "Ruta no encontrada."));
