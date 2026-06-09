@@ -1,21 +1,54 @@
 import type { CSSProperties, ReactNode } from "react";
-import { GM_SURFACE } from "../tokens";
+import { DASH_TOKENS } from "../tokens";
 
-const CARD_BORDER = "rgba(255,255,255,0.06)";
-const CARD_SHADOW = "0 8px 32px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset";
+export type PremiumCardElevation = "rest" | "raised";
 
 export interface PremiumCardProps {
   children: ReactNode;
   className?: string;
   accent?: boolean;
+  elevation?: PremiumCardElevation;
   style?: CSSProperties;
   padding?: string;
+}
+
+function resolvePremiumCardStyle(
+  accent: boolean,
+  elevation: PremiumCardElevation
+): CSSProperties {
+  const isRaised = elevation === "raised";
+
+  if (accent && isRaised) {
+    return {
+      borderRadius: DASH_TOKENS.radiusCardRaised,
+      background: DASH_TOKENS.surfaceAccent,
+      border: `1.5px solid ${DASH_TOKENS.borderAccentStrong}`,
+      boxShadow: `${DASH_TOKENS.shadowRaised}, ${DASH_TOKENS.shadowAccentInset}`,
+    };
+  }
+
+  if (accent) {
+    return {
+      borderRadius: DASH_TOKENS.radiusCard,
+      background: `linear-gradient(145deg, rgba(21, 21, 21, 0.98) 0%, rgba(14, 14, 14, 0.98) 100%)`,
+      border: `1px solid ${DASH_TOKENS.borderAccent}`,
+      boxShadow: DASH_TOKENS.shadowRest,
+    };
+  }
+
+  return {
+    borderRadius: isRaised ? DASH_TOKENS.radiusCardRaised : DASH_TOKENS.radiusCard,
+    background: isRaised ? DASH_TOKENS.surface2 : DASH_TOKENS.surfaceMetric,
+    border: `1px solid ${DASH_TOKENS.borderRest}`,
+    boxShadow: isRaised ? DASH_TOKENS.shadowRaised : DASH_TOKENS.shadowRest,
+  };
 }
 
 export function PremiumCard({
   children,
   className = "",
   accent = false,
+  elevation = "rest",
   style,
   padding = "28px 30px",
 }: PremiumCardProps) {
@@ -23,13 +56,8 @@ export function PremiumCard({
     <div
       className={`relative overflow-hidden ${className}`}
       style={{
-        borderRadius: 20,
         padding,
-        background: accent
-          ? "linear-gradient(145deg, rgba(21,21,21,0.98) 0%, rgba(14,14,14,0.98) 100%)"
-          : `linear-gradient(160deg, ${GM_SURFACE} 0%, #111111 100%)`,
-        border: accent ? "1px solid rgba(212,175,55,0.22)" : `1px solid ${CARD_BORDER}`,
-        boxShadow: CARD_SHADOW,
+        ...resolvePremiumCardStyle(accent, elevation),
         ...style,
       }}
     >

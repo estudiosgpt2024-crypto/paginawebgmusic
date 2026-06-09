@@ -20,16 +20,9 @@ export function PracticeCard({
   return (
     <PremiumCard
       accent
+      elevation="raised"
       className="w-full"
       padding="40px 48px"
-      style={{
-        borderRadius: 24,
-        background:
-          "linear-gradient(135deg, rgba(28,24,14,0.98) 0%, rgba(16,14,10,0.99) 50%, rgba(10,10,10,1) 100%)",
-        border: "1.5px solid rgba(201, 168, 76, 0.35)",
-        boxShadow:
-          "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(201, 168, 76, 0.05) inset, 0 1px 0 rgba(201, 168, 76, 0.1) inset",
-      }}
     >
       <div className="flex w-full flex-col items-center text-center">
         <p

@@ -1,19 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity } from "lucide-react";
 import { PremiumCard } from "./PremiumCard";
-import { GM_GOLD, GM_TEXT_SEC } from "../tokens";
-
-const METRIC_CARD_SHADOW =
-  "0 8px 32px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset, inset 0 0 0 1px rgba(201,168,76,0.08)";
-
-const metricCardStyle = {
-  background: "linear-gradient(165deg, #141414 0%, #0d0d0d 100%)",
-  border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 20,
-  boxShadow: METRIC_CARD_SHADOW,
-};
-
-const PROGRESS_LED = "#38BDF8";
+import { DASH_TOKENS, GM_GOLD, GM_TEXT_SEC } from "../tokens";
 
 type MetricCardBaseProps = {
   icon: LucideIcon;
@@ -45,7 +33,7 @@ export function MetricCard(props: MetricCardProps) {
 
   if (props.variant === "progress") {
     return (
-      <PremiumCard className={className} padding="32px 30px" style={metricCardStyle}>
+      <PremiumCard className={className} padding="32px 30px">
         <div className="flex items-center gap-2.5 mb-5">
           <Icon className="w-4 h-4" style={{ color: GM_GOLD }} />
           <p className="text-[10px] uppercase tracking-[0.16em] font-bold" style={{ color: GM_TEXT_SEC }}>
@@ -70,23 +58,8 @@ export function MetricCard(props: MetricCardProps) {
               width: `${props.progressPercent}%`,
               maxWidth: "100%",
               background: `linear-gradient(90deg, ${GM_GOLD} 0%, rgba(201,168,76,0.8) 100%)`,
-              boxShadow: "0 0 10px rgba(201,168,76,0.3)",
             }}
-          >
-            {props.progressPercent > 0 && (
-              <span
-                className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-                style={{
-                  width: 5,
-                  height: 5,
-                  marginRight: 1,
-                  background: PROGRESS_LED,
-                  boxShadow: `0 0 6px rgba(56,189,248,0.85), 0 0 2px ${PROGRESS_LED}`,
-                }}
-                aria-hidden
-              />
-            )}
-          </div>
+          />
         </div>
         <div
           className="flex flex-col gap-2 text-[13px] pt-1"
@@ -106,7 +79,7 @@ export function MetricCard(props: MetricCardProps) {
   }
 
   return (
-    <PremiumCard className={className} padding="32px 30px" style={metricCardStyle}>
+    <PremiumCard className={className} padding="32px 30px">
       <div className="flex justify-between items-start gap-4 h-full">
         <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
           <div>
@@ -136,29 +109,14 @@ export function MetricCard(props: MetricCardProps) {
             </p>
           </div>
         </div>
-        <div className="relative w-[76px] h-[76px] shrink-0 flex items-center justify-center mt-3">
-          <span
-            className="absolute inset-0 rounded-full animate-ping opacity-25"
-            style={{
-              background: "radial-gradient(circle, rgba(201,168,76,0.3) 0%, transparent 70%)",
-            }}
-          />
-          <span
-            className="absolute inset-2 rounded-full animate-pulse"
-            style={{
-              border: "1.5px solid rgba(201,168,76,0.25)",
-              background: "rgba(201,168,76,0.02)",
-            }}
-          />
-          <div
-            className="relative w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(201,168,76,0.15)]"
-            style={{
-              background: "radial-gradient(circle, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.05) 100%)",
-              border: "1.5px solid rgba(201,168,76,0.4)",
-            }}
-          >
-            <Activity className="w-5 h-5 text-[#C9A84C]" />
-          </div>
+        <div
+          className="relative w-[76px] h-[76px] shrink-0 flex items-center justify-center mt-3 rounded-full"
+          style={{
+            background: DASH_TOKENS.surface2,
+            border: `1px solid ${DASH_TOKENS.borderAccent}`,
+          }}
+        >
+          <Activity className="w-5 h-5 text-[#C9A84C]" />
         </div>
       </div>
     </PremiumCard>

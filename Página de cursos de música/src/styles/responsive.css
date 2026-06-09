@@ -102,7 +102,7 @@
   /* Hero h1 más pequeño */
   .hero-h1 {
     font-size: clamp(28px, 9vw, 44px) !important;
-    letter-spacing: -1px !important;
+    letter-spacing: 0 !important;
     line-height: 1.2 !important;
   }
 }
