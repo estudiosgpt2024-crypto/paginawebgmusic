@@ -49,8 +49,8 @@ export function PlanesSection({ setPage }: PlanesSectionProps) {
             color: TEXT_SEC, fontSize: 16, lineHeight: 1.7,
             fontFamily: "Inter, sans-serif", maxWidth: 480, margin: "20px auto 0",
           }}>
-            Estamos preparando el acceso. Mientras tanto, puedes probar el método
-            gratis y reservar tu lugar.
+            Estamos preparando el acceso. Mientras tanto, puedes ver la clase
+            gratuita y conocer el método.
           </motion.p>
         </motion.div>
 
@@ -105,7 +105,7 @@ export function PlanesSection({ setPage }: PlanesSectionProps) {
           <motion.button
             whileHover={{ background: GOLD_SOFT, boxShadow: "0 10px 32px rgba(201,168,76,0.35)" }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => setPage("probar")}
+            onClick={() => setPage("fundamento-preview")}
             style={{
               height: 50, padding: "0 40px", borderRadius: 2,
               background: GOLD, color: "#080808", fontSize: 13, fontWeight: 700,
@@ -114,7 +114,7 @@ export function PlanesSection({ setPage }: PlanesSectionProps) {
               boxShadow: "0 4px 20px rgba(201,168,76,0.2)",
             }}
           >
-            Probar gratis
+            Ver clase gratuita
           </motion.button>
         </motion.div>
       </div>

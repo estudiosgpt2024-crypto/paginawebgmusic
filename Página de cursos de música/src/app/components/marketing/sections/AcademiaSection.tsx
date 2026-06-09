@@ -64,7 +64,8 @@ export function AcademiaSection({ setPage, setLevel }: AcademiaSectionProps) {
             fontFamily: "Inter, sans-serif", letterSpacing: "0.3px",
           }}
         >
-          Elige tu etapa → elige tu instrumento → accedes a los cursos de ese recorrido.
+          Elige tu punto de partida dentro de la academia y comienza con la clase
+          gratuita de Fundamento.
         </motion.p>
       </div>
     </section>

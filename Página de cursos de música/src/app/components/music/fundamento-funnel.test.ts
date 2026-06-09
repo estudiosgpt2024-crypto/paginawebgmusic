@@ -14,9 +14,94 @@ import {
 
 const root = dirname(fileURLToPath(import.meta.url));
 const selectorSource = readFileSync(join(root, "InteractiveLevelSelector.tsx"), "utf8");
+const heroSource = readFileSync(join(root, "../marketing/sections/HeroSection.tsx"), "utf8");
+const planesSource = readFileSync(join(root, "../marketing/sections/PlanesSection.tsx"), "utf8");
+const academiaSource = readFileSync(join(root, "../marketing/sections/AcademiaSection.tsx"), "utf8");
 const appSource = readFileSync(join(root, "../../App.tsx"), "utf8");
 const previewSource = readFileSync(join(root, "../../pages/FundamentoPreviewPage.tsx"), "utf8");
 const lessonSource = readFileSync(join(root, "../../pages/FreeFundamentoLessonPage.tsx"), "utf8");
+
+const LEGACY_PUBLIC_TARGETS = ["probar", "dashboard", "curriculum", "lesson"] as const;
+
+function assertNoLegacyNavigation(source: string, componentName: string) {
+  for (const target of LEGACY_PUBLIC_TARGETS) {
+    assert.equal(
+      source.includes(`setPage("${target}")`),
+      false,
+      `${componentName} no debe navegar a ${target}`
+    );
+  }
+}
+
+describe("HeroSection — funnel público A2", () => {
+  it("Ver clase gratuita navega a fundamento-preview", () => {
+    assert.equal(heroSource.includes("Ver clase gratuita"), true);
+    assert.equal(heroSource.includes('setPage("fundamento-preview")'), true);
+  });
+
+  it("no usa Probar gratis ni setPage probar", () => {
+    assert.equal(heroSource.includes("Probar gratis"), false);
+    assert.equal(heroSource.includes('setPage("probar")'), false);
+    assertNoLegacyNavigation(heroSource, "HeroSection");
+  });
+});
+
+describe("PlanesSection — funnel público A2", () => {
+  it("Ver clase gratuita navega a fundamento-preview", () => {
+    assert.equal(planesSource.includes("Ver clase gratuita"), true);
+    assert.equal(planesSource.includes('setPage("fundamento-preview")'), true);
+  });
+
+  it("no usa Probar gratis ni setPage probar", () => {
+    assert.equal(planesSource.includes("Probar gratis"), false);
+    assert.equal(planesSource.includes('setPage("probar")'), false);
+    assertNoLegacyNavigation(planesSource, "PlanesSection");
+  });
+});
+
+describe("AcademiaSection — copy y aislamiento legacy", () => {
+  it("no habla de elegir instrumento", () => {
+    assert.equal(academiaSource.includes("instrumento"), false);
+    assert.equal(academiaSource.includes("punto de partida dentro de la academia"), true);
+  });
+
+  it("no navega a páginas legacy", () => {
+    assertNoLegacyNavigation(academiaSource, "AcademiaSection");
+  });
+});
+
+describe("InteractiveLevelSelector — labels pedagógicos", () => {
+  it("expone niveles superiores Básico, Intermedio y Avanzado", () => {
+    assert.equal(selectorSource.includes("Nivel 1 · Básico"), true);
+    assert.equal(selectorSource.includes("Nivel 2 · Intermedio"), true);
+    assert.equal(selectorSource.includes("Nivel 3 · Avanzado"), true);
+  });
+
+  it("conserva nombres pedagógicos inferiores", () => {
+    assert.equal(selectorSource.includes('title: "Fundamento"'), true);
+    assert.equal(selectorSource.includes('title: "Técnica"'), true);
+    assert.equal(selectorSource.includes('title: "Crea"'), true);
+  });
+
+  it("usa descripciones pedagógicas actualizadas", () => {
+    assert.equal(
+      selectorSource.includes("Postura, primeras notas y primeros acordes."),
+      true
+    );
+    assert.equal(
+      selectorSource.includes("Escalas, rasgueos, precisión, control y fluidez."),
+      true
+    );
+    assert.equal(
+      selectorSource.includes("Canciones, composición y expresión propia."),
+      true
+    );
+  });
+
+  it("no navega a páginas legacy", () => {
+    assertNoLegacyNavigation(selectorSource, "InteractiveLevelSelector");
+  });
+});
 
 describe("InteractiveLevelSelector — funnel Fundamento", () => {
   it("Fundamento abre fundamento-preview", () => {
@@ -94,6 +179,13 @@ describe("FreeFundamentoLessonPage", () => {
     assert.equal(lessonSource.includes("correct"), false);
     assert.equal(lessonSource.includes("LessonRunnerShell"), false);
     assert.equal(lessonSource.includes("useLessonRunner"), false);
+  });
+
+  it("no muestra XP, racha ni semana completada", () => {
+    assert.equal(lessonSource.includes("XP"), false);
+    assert.equal(lessonSource.includes("racha"), false);
+    assert.equal(lessonSource.includes("Semana completada"), false);
+    assert.equal(lessonSource.includes("CofreVirtual"), false);
   });
 
   it("no usa letterSpacing negativo en títulos", () => {

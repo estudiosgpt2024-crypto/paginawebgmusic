@@ -4,9 +4,9 @@ import { motion } from "motion/react";
 const LEVELS = [
   {
     id: "fundamento",
-    subtitle: "NIVEL 1",
+    subtitle: "Nivel 1 · Básico",
     title: "Fundamento",
-    description: "Empieza desde cero. Postura, oído, primeros acordes y el hábito de practicar 7 minutos al día.",
+    description: "Postura, primeras notas y primeros acordes.",
     forWho: "Nunca has tocado o quieres volver a empezar",
     duracion: "Meses 1–4 del programa",
     bgImage: "https://images.unsplash.com/photo-1603661850942-3b922be12831?w=900&q=80",
@@ -16,9 +16,9 @@ const LEVELS = [
   },
   {
     id: "tecnica",
-    subtitle: "NIVEL 2",
+    subtitle: "Nivel 2 · Intermedio",
     title: "Técnica",
-    description: "Ya tienes la base. Ahora construyes limpieza, velocidad y control real sobre el instrumento.",
+    description: "Escalas, rasgueos, precisión, control y fluidez.",
     forWho: "Tocas, pero quieres más precisión y fluidez",
     duracion: "Meses 4–8 del programa",
     bgImage: "https://images.unsplash.com/photo-1579797990179-4ca11c8b47fd?w=900&q=80",
@@ -28,9 +28,9 @@ const LEVELS = [
   },
   {
     id: "crea",
-    subtitle: "NIVEL 3",
+    subtitle: "Nivel 3 · Avanzado",
     title: "Crea",
-    description: "Técnica tienes. Ahora construyes tu sonido propio: composición, improvisación e identidad musical.",
+    description: "Canciones, composición y expresión propia.",
     forWho: "Tienes técnica y quieres expresarte",
     duracion: "Meses 9–12 del programa",
     bgImage: "https://images.unsplash.com/photo-1444623151656-030273ddb785?w=900&q=80",
@@ -80,8 +80,8 @@ export function InteractiveLevelSelector({
               }}
             >
               <span style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: "1.5px",
-                textTransform: "uppercase", fontFamily: "Inter, sans-serif",
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.3px",
+                fontFamily: "Inter, sans-serif",
                 color: active === i ? GOLD : "rgba(255,255,255,0.25)",
                 transition: "color 0.2s",
               }}>{l.subtitle}</span>
@@ -165,8 +165,8 @@ export function InteractiveLevelSelector({
                     style={{ width: "100%" }}
                   >
                     <div style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: "2.5px",
-                      textTransform: "uppercase", color: GOLD,
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.3px",
+                      color: GOLD,
                       fontFamily: "Inter, sans-serif", marginBottom: 6,
                     }}>
                       {level.subtitle}
@@ -263,8 +263,8 @@ export function InteractiveLevelSelector({
                     }}
                   >
                     <span style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: "2px",
-                      textTransform: "uppercase", color: "rgba(201,168,76,0.4)",
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.3px",
+                      color: "rgba(201,168,76,0.4)",
                       fontFamily: "Inter, sans-serif",
                     }}>{level.subtitle}</span>
                     <span style={{

@@ -70,7 +70,7 @@ export function HeroSection({ setPage, scrollTo }: HeroSectionProps) {
             <motion.button
               whileHover={{ background: GOLD_SOFT, boxShadow: "0 8px 32px rgba(201,168,76,0.35)" }}
               whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}
-              onClick={() => setPage("probar")}
+              onClick={() => setPage("fundamento-preview")}
               style={{
                 height: 50, padding: "0 32px", borderRadius: 2,
                 background: GOLD, color: "#080808", fontSize: 13, fontWeight: 700,
@@ -79,7 +79,7 @@ export function HeroSection({ setPage, scrollTo }: HeroSectionProps) {
                 boxShadow: "0 4px 20px rgba(201,168,76,0.22)",
               }}
             >
-              Probar gratis
+              Ver clase gratuita
             </motion.button>
             <motion.button
               whileHover={{ background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.5)" }}
