@@ -11,3 +11,9 @@ export { MetricCard } from "./MetricCard";
 export type { MetricCardProps, ProgressMetricCardProps, XpMetricCardProps } from "./MetricCard";
 export { QuoteCard } from "./QuoteCard";
 export { LockedFeatureCard } from "./LockedFeatureCard";
+export { WeeklyChestCelebrationShell } from "./WeeklyChestCelebrationShell";
+export type {
+  WeeklyChestCelebrationState,
+  WeeklyChestCelebrationShellProps,
+} from "./WeeklyChestCelebrationShell";
+export { normalizeDashboardProgressPercent } from "./normalize-dashboard-progress";

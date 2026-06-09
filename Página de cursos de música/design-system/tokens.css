@@ -106,4 +106,24 @@
   --btn-premium-shadow-rest:   0 4px 0 #8E722A, 0 16px 34px rgba(201, 168, 76, 0.24), 0 1px 0 rgba(255, 255, 255, 0.22) inset;
   --btn-premium-shadow-active: 0 0 0 #8E722A, 0 8px 24px rgba(201, 168, 76, 0.18);
   --btn-premium-transition:    80ms ease;
+
+  /* ── Dashboard — progreso (LED optimizado WebKit) ─ */
+  --dash-progress-track-bg:   rgba(255, 255, 255, 0.05);
+  --dash-progress-fill-start: var(--gold-primary);
+  --dash-progress-fill-end:   rgba(201, 168, 76, 0.8);
+  --dash-progress-led-color:  #38bdf8;
+  --dash-progress-led-glow:   drop-shadow(0 0 4px rgba(56, 189, 248, 0.85)) drop-shadow(0 0 2px #38bdf8);
+
+  /* ── Dashboard — locked cards (WCAG AA sobre #0d0d0d) ─ */
+  --dash-surface-locked:      #0d0d0d;
+  --dash-locked-text:         #7a7a7a;
+  --dash-locked-text-muted:   #555555;
+  --dash-locked-border:       rgba(255, 255, 255, 0.04);
+  --dash-locked-badge-text:   rgba(201, 168, 76, 0.85);
+  --dash-locked-badge-bg:     rgba(201, 168, 76, 0.08);
+  --dash-locked-badge-border: rgba(201, 168, 76, 0.15);
+
+  /* ── Dashboard — celebración cofre semanal ─────── */
+  --dash-chest-overlay-fallback: rgba(0, 0, 0, 0.88);
+  --dash-chest-overlay-blur:       8px;
 }

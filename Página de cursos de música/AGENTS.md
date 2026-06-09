@@ -11,11 +11,24 @@ Fuente de verdad: **`.agents/skills/`**
 | `gmusic-welcome` | Mi Estudio, `GmusicWelcome.tsx` |
 | `gmusic-path` | Mi Camino, `GmusicPath.tsx` |
 | `gmusic-edu-gamified-design` | Diseño gamificado de cursos, progreso, XP, racha y estilo tipo Duolingo adaptado a Gmusic |
+| `gmusic-game-progression-architecture` | Matriz Academia 3×3, funnel de conversión, estados de bloqueo y progresión de juego |
+| `gmusic-visual-vfx` | LED de progreso, ChunkyButton, sombras de volumen, overlay del cofre y atmósfera CSS |
 | `gmusic-learning-engine` | Backend/motor de aprendizaje, microejercicios, Prisma, XP, rachas y apoderados |
 
 Registro completo: `skills.manifest.yaml`
 
 Guía visual local: `DESIGN.md`
+
+## Índice de lectura por tarea
+
+Enrutamiento rápido para optimizar tokens según el tipo de trabajo:
+
+| Tipo de Tarea | Documentos Obligatorios a Leer | Skill a Activar |
+| :--- | :--- | :--- |
+| **Cambios Estructura o Layout** | `AGENTS.md`, `DESIGN.md` | `gmusic-welcome` / `gmusic-path` |
+| **Ajustes de UI, Luces, VFX o CSS** | `AGENTS.md`, `.agents/skills/gmusic-visual-vfx/SKILL.md` | El del módulo activo |
+| **Mecánicas de Juego, XP o Niveles** | `AGENTS.md`, `.agents/skills/gmusic-game-progression-architecture/SKILL.md` | `gmusic-edu-gamified-design` |
+| **Cambios en API o Base de Datos** | `AGENTS.md`, `docs/architecture/` | `gmusic-learning-engine` |
 
 ### Sincronizar entre Cursor, Codex y Antigravity
 

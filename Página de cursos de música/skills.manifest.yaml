@@ -32,6 +32,18 @@ skills:
     scope: project
     path: .agents/skills/gmusic-edu-gamified-design
 
+  - name: gmusic-game-progression-architecture
+    description: Matriz Academia 3×3, funnel Semestral, bloqueo WCAG AA y arquitectura de progresión
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-game-progression-architecture
+
+  - name: gmusic-visual-vfx
+    description: VFX y atmósfera — ChunkyButton, LED WebKit-safe, elevación tokenizada y cofre Radix
+    tools: [cursor, codex, antigravity]
+    scope: project
+    path: .agents/skills/gmusic-visual-vfx
+
   - name: gmusic-learning-engine
     description: Motor de aprendizaje — backend, Prisma, microejercicios, progreso, XP, rachas y apoderados
     tools: [cursor, codex, antigravity]

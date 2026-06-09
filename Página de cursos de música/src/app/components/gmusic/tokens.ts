@@ -21,6 +21,13 @@ export const DASH_TOKENS = {
   btnPremiumShadowRest: "var(--btn-premium-shadow-rest)",
   btnPremiumShadowActive: "var(--btn-premium-shadow-active)",
   btnPremiumTransition: "var(--btn-premium-transition)",
+  progressTrackBg: "var(--dash-progress-track-bg)",
+  progressLedColor: "var(--dash-progress-led-color)",
+  progressLedGlow: "var(--dash-progress-led-glow)",
+  surfaceLocked: "var(--dash-surface-locked)",
+  lockedText: "var(--dash-locked-text)",
+  lockedTextMuted: "var(--dash-locked-text-muted)",
+  lockedBorder: "var(--dash-locked-border)",
 } as const;
 
 /** @deprecated Prefer DASH_TOKENS + CSS variables for new dashboard UI. */

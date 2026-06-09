@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity } from "lucide-react";
 import { PremiumCard } from "./PremiumCard";
-import { DASH_TOKENS, GM_GOLD, GM_TEXT_SEC } from "../tokens";
+import { normalizeDashboardProgressPercent } from "./normalize-dashboard-progress";
+import { GM_GOLD, GM_TEXT_SEC } from "../tokens";
 
 type MetricCardBaseProps = {
   icon: LucideIcon;
@@ -32,6 +33,9 @@ export function MetricCard(props: MetricCardProps) {
   const { icon: Icon, eyebrow, className = "lg:col-span-4" } = props;
 
   if (props.variant === "progress") {
+    const progressPercent = normalizeDashboardProgressPercent(props.progressPercent);
+    const showLed = progressPercent > 0;
+
     return (
       <PremiumCard className={className} padding="32px 30px">
         <div className="flex items-center gap-2.5 mb-5">
@@ -48,18 +52,10 @@ export function MetricCard(props: MetricCardProps) {
             {props.suffix}
           </span>
         </div>
-        <div
-          className="w-full h-1.5 rounded-full overflow-hidden mb-6"
-          style={{ background: "rgba(255,255,255,0.05)" }}
-        >
-          <div
-            className="relative h-full min-w-0 rounded-full"
-            style={{
-              width: `${props.progressPercent}%`,
-              maxWidth: "100%",
-              background: `linear-gradient(90deg, ${GM_GOLD} 0%, rgba(201,168,76,0.8) 100%)`,
-            }}
-          />
+        <div className="dash-progress-track" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
+          <div className="dash-progress-fill" style={{ width: `${progressPercent}%`, maxWidth: "100%" }}>
+            {showLed && <span className="dash-progress-led" aria-hidden="true" />}
+          </div>
         </div>
         <div
           className="flex flex-col gap-2 text-[13px] pt-1"
@@ -112,8 +108,8 @@ export function MetricCard(props: MetricCardProps) {
         <div
           className="relative w-[76px] h-[76px] shrink-0 flex items-center justify-center mt-3 rounded-full"
           style={{
-            background: DASH_TOKENS.surface2,
-            border: `1px solid ${DASH_TOKENS.borderAccent}`,
+            background: "var(--dash-surface-2)",
+            border: "1px solid var(--dash-border-accent)",
           }}
         >
           <Activity className="w-5 h-5 text-[#C9A84C]" />
