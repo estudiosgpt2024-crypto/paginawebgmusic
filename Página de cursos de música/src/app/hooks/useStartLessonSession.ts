@@ -5,30 +5,32 @@ import { DashboardRequestManager } from "./dashboard-request";
 
 export type StartLessonSessionHookState =
   | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success"; result: LessonSessionStartResult }
-  | { status: "error"; message: string };
+  | { status: "loading"; nodeId: string; requestGeneration: number }
+  | { status: "success"; nodeId: string; requestGeneration: number; result: LessonSessionStartResult }
+  | { status: "error"; nodeId: string; requestGeneration: number; message: string };
 
 export function useStartLessonSession() {
   const [state, setState] = useState<StartLessonSessionHookState>({ status: "idle" });
   const managerRef = useRef(new DashboardRequestManager());
   const lastNodeIdRef = useRef<string | null>(null);
+  const requestGenerationRef = useRef(0);
 
   const run = useCallback(async (nodeId: string) => {
     lastNodeIdRef.current = nodeId;
+    const requestGeneration = ++requestGenerationRef.current;
     const manager = managerRef.current;
     const { generation, signal } = manager.begin();
-    setState({ status: "loading" });
+    setState({ status: "loading", nodeId, requestGeneration });
 
     const outcome = await loadLessonSessionOnce(nodeId, signal);
     if (!manager.isCurrent(generation)) return;
 
     if (outcome.type === "aborted") return;
     if (outcome.type === "success") {
-      setState({ status: "success", result: outcome.result });
+      setState({ status: "success", nodeId, requestGeneration, result: outcome.result });
       return;
     }
-    setState({ status: "error", message: outcome.message });
+    setState({ status: "error", nodeId, requestGeneration, message: outcome.message });
   }, []);
 
   const start = useCallback(

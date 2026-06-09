@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../components/gmusic/GmusicInternalHeader";
 import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
 import { DashboardErrorBanner } from "../components/gmusic/dashboard";
@@ -6,8 +6,19 @@ import { PathPageIntro } from "../components/gmusic/path/PathPageIntro";
 import { SerpentinePathMap } from "../components/gmusic/path/SerpentinePathMap";
 import { ActiveNodePanel } from "../components/gmusic/path/ActiveNodePanel";
 import { CompletedPathPanel } from "../components/gmusic/path/CompletedPathPanel";
+import { LessonSessionReadyModal } from "../components/gmusic/path/LessonSessionReadyModal";
+import {
+  buildSessionReadyModalContent,
+  canStartLessonFromNode,
+} from "../components/gmusic/path/path-lesson-start";
+import {
+  resolveLessonSessionForPanel,
+  resolveMatchingSuccessKey,
+  resolveSessionModalVisibility,
+} from "../components/gmusic/path/path-lesson-panel-session";
 import { GM_BG, GM_TEXT, GM_TEXT_SEC } from "../components/gmusic/tokens";
 import { usePath } from "../hooks/usePath";
+import { useStartLessonSession } from "../hooks/useStartLessonSession";
 import { findPathNodeById } from "../services/gmusic-api/map-path";
 import type { PathNodeData } from "../data/gmusic-path-types";
 
@@ -15,7 +26,7 @@ interface GmusicPathProps {
   setPage: (page: string) => void;
 }
 
-type ModalKind = "lesson" | "leveling" | "locked" | null;
+type ModalKind = "leveling" | "locked" | null;
 
 function panelEyebrow(node: PathNodeData | null): string {
   if (!node) return "Próxima práctica";
@@ -25,8 +36,10 @@ function panelEyebrow(node: PathNodeData | null): string {
 
 export function GmusicPath({ setPage }: GmusicPathProps) {
   const [modal, setModal] = useState<ModalKind>(null);
+  const [dismissedSuccessKey, setDismissedSuccessKey] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const path = usePath();
+  const lessonSession = useStartLessonSession();
 
   const viewModel = path.status === "success" ? path.viewModel : null;
 
@@ -47,11 +60,6 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
 
   const modalProps = () => {
     switch (modal) {
-      case "lesson":
-        return {
-          title: "Próximamente — lección interactiva",
-          subtitle: "Esta lección estará disponible en la siguiente fase del camino.",
-        };
       case "leveling":
         return {
           title: "Próximamente — evaluación de módulo",
@@ -71,6 +79,37 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
   const mp = modalProps();
   const isLoading = path.status === "loading";
   const panelNode = viewModel ? findPathNodeById(viewModel.modules, selectedNodeId) : null;
+  const canStartLesson = canStartLessonFromNode(panelNode);
+  const panelSession = resolveLessonSessionForPanel(lessonSession, panelNode?.id);
+  const matchingSuccessKey = resolveMatchingSuccessKey(lessonSession, panelNode?.id);
+  const sessionModalOpen = resolveSessionModalVisibility(matchingSuccessKey, dismissedSuccessKey);
+
+  const sessionModalContent = useMemo(() => {
+    if (!panelSession.sessionSuccess) return null;
+    return buildSessionReadyModalContent(panelSession.sessionSuccess);
+  }, [panelSession.sessionSuccess]);
+
+  const handleStartLesson = useCallback(() => {
+    if (!panelNode || !canStartLessonFromNode(panelNode)) return;
+    lessonSession.start(panelNode.id);
+  }, [panelNode, lessonSession]);
+
+  const handleRetrySession = useCallback(() => {
+    if (!panelSession.showRetry) return;
+    lessonSession.retry();
+  }, [panelSession.showRetry, lessonSession]);
+
+  const handleCloseSessionModal = useCallback(() => {
+    if (matchingSuccessKey) setDismissedSuccessKey(matchingSuccessKey);
+  }, [matchingSuccessKey]);
+
+  const sharedPanelProps = {
+    onStartLesson: handleStartLesson,
+    isStartingLesson: panelSession.isStartingLesson,
+    startLessonDisabled: !canStartLesson,
+    sessionError: panelSession.sessionError,
+    onRetrySession: panelSession.showRetry ? handleRetrySession : undefined,
+  };
 
   const renderSidePanel = (compact?: boolean) => {
     if (isLoading) {
@@ -81,8 +120,9 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
           title="Cargando lección…"
           typeLabel="Conectando con tu camino"
           description="Estamos preparando el detalle de tu próximo paso."
-          onStartLesson={() => setModal("lesson")}
           isLoading
+          startLessonDisabled
+          onStartLesson={() => {}}
         />
       );
     }
@@ -99,7 +139,8 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
           title="Sin paso seleccionado"
           typeLabel="Selecciona un nodo desbloqueado"
           description="Elige un paso activo o desbloqueado en el mapa para ver su detalle."
-          onStartLesson={() => setModal("lesson")}
+          startLessonDisabled
+          {...sharedPanelProps}
         />
       );
     }
@@ -111,7 +152,7 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
         title={panelNode.title}
         typeLabel={panelNode.typeLabel ?? panelNode.type}
         description={panelNode.description ?? ""}
-        onStartLesson={() => setModal("lesson")}
+        {...sharedPanelProps}
       />
     );
   };
@@ -186,6 +227,14 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
         subtitle={mp.subtitle}
         footer={mp.footer}
       />
+
+      {sessionModalContent && sessionModalOpen && (
+        <LessonSessionReadyModal
+          open={sessionModalOpen}
+          onClose={handleCloseSessionModal}
+          content={sessionModalContent}
+        />
+      )}
     </div>
   );
 }

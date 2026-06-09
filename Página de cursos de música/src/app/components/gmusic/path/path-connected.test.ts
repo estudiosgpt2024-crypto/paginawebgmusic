@@ -10,6 +10,7 @@ const connectedSources = [
   join(root, "PathPageIntro.tsx"),
   join(root, "SerpentinePathMap.tsx"),
   join(root, "ActiveNodePanel.tsx"),
+  join(root, "LessonSessionReadyModal.tsx"),
   join(root, "../../../pages/GmusicPath.tsx"),
 ];
 
