@@ -25,6 +25,7 @@ import {
   initStudentZoneRouting,
   navigateStudentZoneAware,
 } from "./utils/student-zone-routing";
+import type { Album, Course, Track, UserData } from "./types/music-app";
 import "../styles/animations.css";
 
 const DEV_LEGACY = import.meta.env.DEV;
@@ -32,20 +33,20 @@ const DEV_LEGACY = import.meta.env.DEV;
 // v4.0 - Sistema completo de monetización
 export default function App() {
   // Music player state
-  const [currentTrack, setCurrentTrack] = useState(TRACKS[0]);
+  const [currentTrack, setCurrentTrack] = useState<Track>(TRACKS[0]);
   const [playing, setPlaying] = useState(false);
   const [playlist] = useState(TRACKS);
 
   // Navigation state
   const [currentPage, setCurrentPage] = useState(getInitialPageFromPath);
-  const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [selectedLevel, setSelectedLevel] = useState("fundamento");
   const [selectedInstrument, setSelectedInstrument] = useState("guitarra");
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   // User state
   const [userState, setUserState] = useState<"anonymous" | "registered" | "premium">("anonymous");
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   // Course progress state
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
@@ -63,15 +64,17 @@ export default function App() {
   const [pendingSemestralCheckout, setPendingSemestralCheckout] = useState(false);
 
   // Music player functions
-  const onPlay = (track) => { setCurrentTrack(track); setPlaying(true); };
-  const onPlayAlbum = (album) => {
+  const onPlay = (track: Track) => { setCurrentTrack(track); setPlaying(true); };
+  const onPlayAlbum = (album: Album) => {
     const t = album.tracklist[0];
-    setCurrentTrack({ id:album.id*100, title:t.title, artist:album.artist, album:album.title, image:album.image, duration:t.duration });
+    if (!t) return;
+    setCurrentTrack({ id: album.id * 100, title: t.title, artist: album.artist, album: album.title, image: album.image, duration: t.duration });
     setPlaying(true);
   };
-  const onSkip = (dir) => {
+  const onSkip = (dir: number) => {
     const idx = playlist.findIndex(t=>t.id===currentTrack.id);
     const next = playlist[(idx+dir+playlist.length)%playlist.length];
+    if (!next) return;
     setCurrentTrack(next); setPlaying(true);
   };
 
@@ -87,7 +90,7 @@ export default function App() {
   };
 
   // Auth handlers
-  const handleAuthSuccess = (user) => {
+  const handleAuthSuccess = (user: UserData) => {
     setUserData(user);
     setUserState("registered");
     setShowAuthModal(false);
@@ -102,7 +105,7 @@ export default function App() {
     setCurrentPage("mi-estudio");
   };
 
-  const handleCourseClick = (course) => {
+  const handleCourseClick = (course: Course) => {
     setSelectedCourse(course);
     setCurrentPage("course-detail");
   };
@@ -113,7 +116,7 @@ export default function App() {
       TRACKS[0]?.image,
       ALBUMS[0]?.image,
       COURSES[0]?.image,
-    ].filter(Boolean);
+    ].filter((url): url is string => Boolean(url));
 
     if (criticalImages.length > 0) {
       preloadCriticalImages(criticalImages);
@@ -258,7 +261,7 @@ export default function App() {
           playing={playing}
           onToggle={()=>setPlaying(!playing)}
           onSkip={onSkip}
-          onSelect={(t)=>{ setCurrentTrack(t); setPlaying(true); }}
+          onSelect={(t: Track) => { setCurrentTrack(t); setPlaying(true); }}
         />
       )}
     </div>

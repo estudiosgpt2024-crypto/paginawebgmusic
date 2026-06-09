@@ -10,6 +10,7 @@
     "db:seed:new-student": "tsx prisma/seed-new-student.ts",
     "prisma:generate": "prisma generate",
     "api:dev": "tsx --env-file=.env server/index.ts",
+    "app:typecheck": "tsc -p tsconfig.app.json --noEmit",
     "api:typecheck": "tsc -p tsconfig.server.json --noEmit",
     "api:test": "node --env-file-if-exists=.env --import tsx --test --test-concurrency=1 server/tests/**/*.test.ts",
     "app:test": "node --import tsx --test 'src/**/*.test.ts'"

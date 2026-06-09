@@ -14,6 +14,12 @@ const INSTRUMENTS = [
   }
 ];
 
+const LEVEL_INFO = {
+  fundamento: { label: "Fundamento", subtitle: "LA BASE", color: "#3b82f6", icon: "🌱" },
+  tecnica: { label: "Técnica", subtitle: "EL CONTROL", color: "#f59e0b", icon: "🔥" },
+  crea: { label: "Crea", subtitle: "LA EXPRESIÓN", color: "#ec4899", icon: "✨" }
+} as const;
+
 interface InstrumentSelectorPageProps {
   level: string;
   setPage: (page: string) => void;
@@ -23,11 +29,7 @@ interface InstrumentSelectorPageProps {
 export function InstrumentSelectorPage({ level, setPage, setInstrument }: InstrumentSelectorPageProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const levelInfo = {
-    fundamento: { label: "Fundamento", subtitle: "LA BASE", color: "#3b82f6", icon: "🌱" },
-    tecnica: { label: "Técnica", subtitle: "EL CONTROL", color: "#f59e0b", icon: "🔥" },
-    crea: { label: "Crea", subtitle: "LA EXPRESIÓN", color: "#ec4899", icon: "✨" }
-  }[level] || levelInfo.fundamento;
+  const levelInfo = LEVEL_INFO[level as keyof typeof LEVEL_INFO] ?? LEVEL_INFO.fundamento;
 
   const handleInstrumentClick = (instrumentId: string) => {
     setInstrument(instrumentId);

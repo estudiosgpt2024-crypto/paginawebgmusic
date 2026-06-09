@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Avatar } from "../components/ui/Avatar";
+import { Avatar } from "../components/ui/avatar";
 
 interface CommunityPageProps {
   setPage: (page: string) => void;

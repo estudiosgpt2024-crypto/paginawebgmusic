@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { OptimizedImage, getOptimizedImageUrl } from "../../components/ui/OptimizedImage";
-import { Avatar } from "../../components/ui/Avatar";
+import { Avatar } from "../../components/ui/avatar";
 import { IMAGE_CONFIG } from "../../utils/image-config";
 
 interface CourseDetailPageProps {

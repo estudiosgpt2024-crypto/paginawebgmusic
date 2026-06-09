@@ -43,12 +43,13 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
   const lessonSession = useStartLessonSession();
 
   const viewModel = path.status === "success" ? path.viewModel : null;
+  const defaultPanelNodeId = path.status === "success" ? path.viewModel.defaultPanelNodeId : null;
 
   useEffect(() => {
     if (path.status === "success") {
       setSelectedNodeId(path.viewModel.defaultPanelNodeId);
     }
-  }, [path.status, path.viewModel?.defaultPanelNodeId]);
+  }, [path.status, defaultPanelNodeId]);
 
   const openNavPlaceholder = useCallback((key: string) => {
     if (isLockedNav(key)) setModal("locked");
@@ -141,7 +142,6 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
           title="Sin paso seleccionado"
           typeLabel="Selecciona un nodo desbloqueado"
           description="Elige un paso activo o desbloqueado en el mapa para ver su detalle."
-          startLessonDisabled
           {...sharedPanelProps}
         />
       );

@@ -109,8 +109,8 @@ describe("createLessonSession", () => {
       (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.equal(error.name, "GmusicApiError");
-        assert.equal((error as { code: string }).code, "UNEXPECTED_API_RESPONSE");
-        assert.equal((error as { status: number }).status, 202);
+        assert.equal((error as unknown as { code: string }).code, "UNEXPECTED_API_RESPONSE");
+        assert.equal((error as unknown as { status: number }).status, 202);
         return true;
       }
     );
@@ -133,7 +133,7 @@ describe("createLessonSession", () => {
       (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.equal(error.name, "GmusicApiError");
-        assert.equal((error as { code: string }).code, "VALIDATION_ERROR");
+        assert.equal((error as unknown as { code: string }).code, "VALIDATION_ERROR");
         return true;
       }
     );
@@ -199,8 +199,8 @@ describe("seguridad del resultado de sesión", () => {
       (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.equal(error.name, "GmusicApiError");
-        assert.equal((error as { code: string }).code, "UNSAFE_API_RESPONSE");
-        assert.equal((error as { status: number }).status, 201);
+        assert.equal((error as unknown as { code: string }).code, "UNSAFE_API_RESPONSE");
+        assert.equal((error as unknown as { status: number }).status, 201);
         return true;
       }
     );

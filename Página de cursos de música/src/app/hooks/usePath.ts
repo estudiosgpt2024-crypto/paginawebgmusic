@@ -25,8 +25,8 @@ export function usePath() {
     }
 
     const outcome = await loadPathOnce(signal);
-    const nextState = applyDashboardOutcome(generation, manager, outcome);
-    if (nextState) setState(nextState as PathHookState);
+    const nextState = applyDashboardOutcome<PathViewModel>(generation, manager, outcome);
+    if (nextState) setState(nextState);
   }, []);
 
   useEffect(() => {

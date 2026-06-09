@@ -5,8 +5,8 @@ import {
   derivePhaseLabel,
   mapDashboardToViewModel,
   nonNegative,
-  type DashboardResponse,
 } from "./map-dashboard";
+import type { DashboardResponse } from "./types";
 
 const BASE_RESPONSE: DashboardResponse = {
   user: {

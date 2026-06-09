@@ -1,10 +1,16 @@
-import type { DashboardLoadOutcome } from "../services/gmusic-api/dashboard-load";
-import type { DashboardViewModel } from "../services/gmusic-api";
+export type RequestLoadOutcome<TViewModel> =
+  | { type: "success"; viewModel: TViewModel }
+  | { type: "error"; message: string }
+  | { type: "aborted" };
 
-export type DashboardHookState =
+export type RequestHookState<TViewModel> =
   | { status: "loading" }
-  | { status: "success"; viewModel: DashboardViewModel }
+  | { status: "success"; viewModel: TViewModel }
   | { status: "error"; message: string };
+
+export type DashboardHookState = RequestHookState<
+  import("../services/gmusic-api").DashboardViewModel
+>;
 
 export class DashboardRequestManager {
   private generation = 0;
@@ -27,17 +33,19 @@ export class DashboardRequestManager {
   }
 }
 
-export function outcomeToState(outcome: DashboardLoadOutcome): DashboardHookState | null {
+export function outcomeToState<TViewModel>(
+  outcome: RequestLoadOutcome<TViewModel>
+): RequestHookState<TViewModel> | null {
   if (outcome.type === "aborted") return null;
   if (outcome.type === "error") return { status: "error", message: outcome.message };
   return { status: "success", viewModel: outcome.viewModel };
 }
 
-export function applyDashboardOutcome(
+export function applyDashboardOutcome<TViewModel>(
   generation: number,
   manager: DashboardRequestManager,
-  outcome: DashboardLoadOutcome
-): DashboardHookState | null {
+  outcome: RequestLoadOutcome<TViewModel>
+): RequestHookState<TViewModel> | null {
   if (!manager.isCurrent(generation)) return null;
   return outcomeToState(outcome);
 }

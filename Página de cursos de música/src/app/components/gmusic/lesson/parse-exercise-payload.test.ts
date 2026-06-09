@@ -326,7 +326,7 @@ describe("parsePublicExercise — seguridad", () => {
       (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.equal(error.name, "GmusicApiError");
-        assert.equal((error as { code: string }).code, "UNSAFE_API_RESPONSE");
+        assert.equal((error as unknown as { code: string }).code, "UNSAFE_API_RESPONSE");
         return true;
       }
     );

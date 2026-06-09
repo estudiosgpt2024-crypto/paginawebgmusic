@@ -87,7 +87,7 @@ describe("respuestas obsoletas del camino", () => {
     let resolveSlow!: (value: PathResponse) => void;
     let callCount = 0;
 
-    const fetchPath = async ({ signal }: { signal?: AbortSignal }) => {
+    const fetchPath = async ({ signal }: { signal?: AbortSignal } = {}) => {
       callCount += 1;
       if (callCount === 1) {
         return new Promise<PathResponse>((resolve, reject) => {

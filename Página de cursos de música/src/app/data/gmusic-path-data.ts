@@ -1,4 +1,4 @@
-import type { PathModuleData } from "./gmusic-path-types";
+import type { PathBadgeData, PathModuleData } from "./gmusic-path-types";
 import { countPathProgress } from "./gmusic-path-types";
 
 export type {

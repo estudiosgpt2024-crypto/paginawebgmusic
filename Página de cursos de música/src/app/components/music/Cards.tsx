@@ -2,7 +2,16 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { OptimizedImage, getOptimizedImageUrl } from "../ui/OptimizedImage";
 
-export function AlbumCard({ album, onOpen, onPlay, activeAlbum, playing, onPlayTrack }) {
+interface AlbumCardProps {
+  album: any;
+  onOpen: () => void;
+  onPlay: () => void;
+  activeAlbum?: string;
+  playing?: boolean;
+  onPlayTrack?: (track: any) => void;
+}
+
+export function AlbumCard({ album, onOpen, onPlay, activeAlbum, playing, onPlayTrack }: AlbumCardProps) {
   const [hov, setHov] = useState(false);
   const [showTracklist, setShowTracklist] = useState(false);
   const isActive = activeAlbum === album.title || (playing && activeAlbum === album.title);
@@ -258,7 +267,12 @@ export function AlbumCard({ album, onOpen, onPlay, activeAlbum, playing, onPlayT
   );
 }
 
-export function CourseCard({ course, onClick }) {
+interface CourseCardProps {
+  course: any;
+  onClick?: () => void;
+}
+
+export function CourseCard({ course, onClick }: CourseCardProps) {
   const [hov, setHov] = useState(false);
   
   return (

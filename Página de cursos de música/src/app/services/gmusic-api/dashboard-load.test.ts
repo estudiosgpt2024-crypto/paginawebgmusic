@@ -86,7 +86,7 @@ describe("respuestas obsoletas", () => {
     let resolveSlow!: (value: DashboardResponse) => void;
     let callCount = 0;
 
-    const fetchDashboard = async ({ signal }: { signal?: AbortSignal }) => {
+    const fetchDashboard = async ({ signal }: { signal?: AbortSignal } = {}) => {
       callCount += 1;
       if (callCount === 1) {
         return new Promise<DashboardResponse>((resolve, reject) => {

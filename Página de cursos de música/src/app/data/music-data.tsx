@@ -43,17 +43,17 @@ export const PRACTICES = [
 
 // ─── HOOKS & COMPONENTS ──────────────────────────────────────────────────
 export function useInView(threshold = 0.1) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const ob = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); ob.disconnect(); } }, { threshold });
     if (ref.current) ob.observe(ref.current);
     return () => ob.disconnect();
   }, [threshold]);
-  return [ref, inView];
+  return { ref, inView };
 }
 
 export function Appear({ children, delay = 0 }) {
-  const [ref, inView] = useInView();
+  const { ref, inView } = useInView();
   return <div ref={ref} style={{ opacity: inView ? 1 : 0, transform: inView ? "translateY(0)" : "translateY(28px)", transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms` }}>{children}</div>;
 }

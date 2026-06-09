@@ -186,7 +186,7 @@ describe("seguridad del mapper de camino", () => {
           ],
         },
       ],
-    } as PathResponse;
+    } as unknown as PathResponse;
 
     const serialized = JSON.stringify(mapPathToViewModel(polluted));
     assert.equal(serialized.includes("secureAnswer"), false);
