@@ -1,0 +1,347 @@
+import { useEffect, useId, useMemo, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { Button } from "../../ui/button";
+import { GmusicApiError } from "../../../services/gmusic-api/client";
+import type { LessonSessionResponse } from "../../../services/gmusic-api/types";
+import { abbreviateSessionId } from "../path/path-lesson-start";
+import {
+  GM_BG,
+  GM_BORDER,
+  GM_GOLD,
+  GM_GOLD_MATT,
+  GM_SURFACE,
+  GM_TEXT,
+  GM_TEXT_SEC,
+} from "../tokens";
+import { ExerciseMediaBlock } from "./ExerciseMediaBlock";
+import { LessonExerciseStepper } from "./LessonExerciseStepper";
+import { MultipleChoiceExercise } from "./MultipleChoiceExercise";
+import { prepareLessonRunner } from "./prepare-lesson-runner";
+import type { ParsedExerciseView } from "./lesson-runner-types";
+import { UnsupportedExercisePanel } from "./UnsupportedExercisePanel";
+import { useLessonRunner } from "./useLessonRunner";
+import type { LessonRunnerStatus } from "./lesson-runner-state";
+
+export interface LessonRunnerShellProps {
+  session: LessonSessionResponse;
+  nodeTitle: string;
+  onExit: () => void;
+}
+
+type ShellPreparation =
+  | { kind: "supported"; exercises: ParsedExerciseView[] }
+  | { kind: "incompatible"; exerciseId: string; reason: string }
+  | { kind: "unsafe"; message: string };
+
+export function getLessonRunnerResetKey(sessionId: string): string {
+  return sessionId;
+}
+
+export function isLessonRunnerInteractionDisabled(status: LessonRunnerStatus): boolean {
+  return status === "expired";
+}
+
+export function canAdvanceLessonRunner(
+  status: LessonRunnerStatus,
+  selectedOptionId: string | null
+): boolean {
+  return status === "ready" && selectedOptionId !== null;
+}
+
+function prepareShellSession(session: LessonSessionResponse): ShellPreparation {
+  try {
+    return prepareLessonRunner(session);
+  } catch (error) {
+    if (error instanceof GmusicApiError && error.code === "UNSAFE_API_RESPONSE") {
+      return { kind: "unsafe", message: error.message };
+    }
+    throw error;
+  }
+}
+
+function useEscapeExit(onExit: () => void) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onExit();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onExit]);
+}
+
+function LessonRunnerShellFrame({
+  nodeTitle,
+  sessionIdLabel,
+  onExit,
+  children,
+}: {
+  nodeTitle: string;
+  sessionIdLabel: string;
+  onExit: () => void;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+
+  return (
+    <div
+      className="min-h-screen w-full flex flex-col"
+      style={{ background: GM_BG, color: GM_TEXT }}
+      role="main"
+      aria-labelledby={titleId}
+    >
+      <header
+        className="sticky top-0 z-10 border-b px-4 py-4 md:px-6"
+        style={{ background: GM_SURFACE, borderColor: GM_BORDER }}
+      >
+        <div className="mx-auto flex max-w-3xl items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p
+              className="text-[10px] font-medium tracking-[0.2em] uppercase mb-1"
+              style={{ color: "rgba(212, 175, 55, 0.65)" }}
+            >
+              Práctica guiada
+            </p>
+            <h1
+              id={titleId}
+              className="text-xl md:text-2xl font-medium leading-snug truncate"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", color: GM_TEXT }}
+            >
+              {nodeTitle}
+            </h1>
+            <p className="text-xs font-mono tracking-wide mt-1" style={{ color: GM_TEXT_SEC }}>
+              Sesión {sessionIdLabel}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onExit}
+            className="shrink-0 min-h-[44px]"
+            aria-label="Volver al camino"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Salir</span>
+          </Button>
+        </div>
+      </header>
+
+      <div className="flex-1 px-4 py-6 md:px-6 md:py-8">
+        <div className="mx-auto max-w-3xl">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function LessonRunnerEmptyState({ onExit }: { onExit: () => void }) {
+  return (
+    <div
+      className="rounded-lg border p-8 text-center"
+      style={{ background: GM_SURFACE, borderColor: GM_BORDER }}
+    >
+      <h2 className="text-lg font-medium mb-2" style={{ color: GM_TEXT }}>
+        Sin ejercicios en esta sesión
+      </h2>
+      <p className="text-sm mb-6" style={{ color: GM_TEXT_SEC }}>
+        No hay ejercicios disponibles para practicar en este momento.
+      </p>
+      <Button
+        type="button"
+        onClick={onExit}
+        className="w-full font-medium min-h-[44px] tracking-wide"
+        style={{ background: GM_GOLD, color: "#0A0A0A" }}
+      >
+        Volver al camino
+      </Button>
+    </div>
+  );
+}
+
+function LessonRunnerExpiredBanner() {
+  return (
+    <div
+      role="status"
+      className="rounded-lg border px-4 py-3 mb-6 text-sm"
+      style={{
+        borderColor: GM_GOLD_MATT,
+        background: "rgba(212, 175, 55, 0.08)",
+        color: GM_TEXT,
+      }}
+    >
+      Sesión expirada. Puedes revisar el camino e iniciar una nueva práctica.
+    </div>
+  );
+}
+
+function LessonRunnerFinishedState({
+  responseCount,
+  onExit,
+}: {
+  responseCount: number;
+  onExit: () => void;
+}) {
+  const countLabel =
+    responseCount === 1 ? "1 respuesta registrada" : `${responseCount} respuestas registradas`;
+
+  return (
+    <div
+      className="rounded-lg border p-8 text-center"
+      style={{ background: GM_SURFACE, borderColor: GM_BORDER }}
+    >
+      <h2 className="text-xl font-medium mb-2" style={{ color: GM_GOLD }}>
+        Práctica preparada para enviar
+      </h2>
+      <p className="text-sm mb-2" style={{ color: GM_TEXT_SEC }}>
+        {countLabel} localmente. El envío al servidor estará disponible en una fase posterior.
+      </p>
+      <Button
+        type="button"
+        onClick={onExit}
+        className="w-full font-medium min-h-[44px] tracking-wide mt-6"
+        style={{ background: GM_GOLD, color: "#0A0A0A" }}
+      >
+        Volver al camino
+      </Button>
+    </div>
+  );
+}
+
+function LessonRunnerActive({
+  exercises,
+  expiresAt,
+  onExit,
+}: {
+  exercises: ParsedExerciseView[];
+  expiresAt: string;
+  onExit: () => void;
+}) {
+  const { state, currentExercise, selectOption, nextExercise } = useLessonRunner({
+    exercises,
+    expiresAt,
+  });
+
+  if (state.status === "finished") {
+    return (
+      <LessonRunnerFinishedState
+        responseCount={state.attemptsDraft.length}
+        onExit={onExit}
+      />
+    );
+  }
+
+  const interactionDisabled = isLessonRunnerInteractionDisabled(state.status);
+  const isLastExercise =
+    state.exercises.length > 0 && state.currentIndex === state.exercises.length - 1;
+  const canAdvance = canAdvanceLessonRunner(state.status, state.selectedOptionId);
+
+  return (
+    <div className="space-y-6">
+      {state.status === "expired" ? <LessonRunnerExpiredBanner /> : null}
+
+      <LessonExerciseStepper
+        currentIndex={state.currentIndex}
+        total={state.exercises.length}
+      />
+
+      {currentExercise ? (
+        <>
+          <ExerciseMediaBlock media={currentExercise.media} />
+          <MultipleChoiceExercise
+            exercise={currentExercise}
+            selectedOptionId={state.selectedOptionId}
+            disabled={interactionDisabled}
+            onSelect={selectOption}
+          />
+        </>
+      ) : null}
+
+      <div className="flex flex-col gap-3 pt-2">
+        <Button
+          type="button"
+          onClick={nextExercise}
+          disabled={!canAdvance}
+          className="w-full font-medium min-h-[44px] tracking-wide"
+          style={{ background: GM_GOLD, color: "#0A0A0A" }}
+        >
+          {isLastExercise ? "Finalizar práctica" : "Siguiente"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onExit}
+          className="w-full font-medium min-h-[44px] tracking-wide"
+        >
+          Volver al camino
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function LessonRunnerShell({
+  session,
+  nodeTitle,
+  onExit,
+}: LessonRunnerShellProps) {
+  const preparation = useMemo(() => prepareShellSession(session), [session]);
+  const sessionIdLabel = abbreviateSessionId(session.sessionId);
+
+  useEscapeExit(onExit);
+
+  if (preparation.kind === "unsafe") {
+    return (
+      <LessonRunnerShellFrame
+        nodeTitle={nodeTitle}
+        sessionIdLabel={sessionIdLabel}
+        onExit={onExit}
+      >
+        <UnsupportedExercisePanel reason={preparation.message} onExit={onExit} />
+      </LessonRunnerShellFrame>
+    );
+  }
+
+  if (preparation.kind === "incompatible") {
+    return (
+      <LessonRunnerShellFrame
+        nodeTitle={nodeTitle}
+        sessionIdLabel={sessionIdLabel}
+        onExit={onExit}
+      >
+        <UnsupportedExercisePanel
+          reason={preparation.reason}
+          exerciseId={preparation.exerciseId}
+          onExit={onExit}
+        />
+      </LessonRunnerShellFrame>
+    );
+  }
+
+  if (preparation.exercises.length === 0) {
+    return (
+      <LessonRunnerShellFrame
+        nodeTitle={nodeTitle}
+        sessionIdLabel={sessionIdLabel}
+        onExit={onExit}
+      >
+        <LessonRunnerEmptyState onExit={onExit} />
+      </LessonRunnerShellFrame>
+    );
+  }
+
+  return (
+    <LessonRunnerShellFrame
+      nodeTitle={nodeTitle}
+      sessionIdLabel={sessionIdLabel}
+      onExit={onExit}
+    >
+      <LessonRunnerActive
+        key={getLessonRunnerResetKey(session.sessionId)}
+        exercises={preparation.exercises}
+        expiresAt={session.expiresAt}
+        onExit={onExit}
+      />
+    </LessonRunnerShellFrame>
+  );
+}
