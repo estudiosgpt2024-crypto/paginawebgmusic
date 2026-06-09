@@ -1,0 +1,20 @@
+# Gmusic Estudio — gitleaks baseline + AI Prime Tech critical key rule.
+# Provider: AI Prime Tech (never Anthropic sk-ant-).
+
+title = "Gmusic gitleaks config"
+
+[[rules]]
+id = "ai-prime-tech-api-key"
+description = "AI Prime Tech API key (sk-943- prefix)"
+regex = '''sk-943-[A-Za-z0-9_-]{8,}'''
+tags = ["key", "AiPrimeTech", "critical"]
+
+[allowlist]
+description = "Security meta-files that document the sk-943- sentinel pattern."
+paths = [
+  '''\.github/workflows/security-scan\.yml$''',
+  '''Página de cursos de música/\.github/gitleaks\.toml$''',
+  '''Página de cursos de música/\.github/workflows/security-scan\.yml$''',
+]
+regexes = []
+stopwords = []

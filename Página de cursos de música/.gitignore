@@ -7,10 +7,18 @@ node_modules/
 dist/
 build/
 
-# Local/system files
-.DS_Store
+# ── Security perimeter (Claude audit — never commit secrets) ──
 .env
-.env.local
+.env.*
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+.agents/secrets/
+.cursor/secrets/
 
 # Accidental duplicate repo/folder
 paginawebgmusic/
@@ -18,5 +26,5 @@ paginawebgmusic/
 # Lockfile generated locally by npm install
 package-lock.json
 
-# Cursor IDE (local skill symlinks)
+# Cursor IDE (local skill symlinks; secrets path also listed above)
 .cursor/

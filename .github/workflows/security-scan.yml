@@ -1,0 +1,223 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: security-scan-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_DIR: "Página de cursos de música"
+  # AI Prime Tech — critical sentinel (NOT Anthropic sk-ant-)
+  PRIME_TECH_KEY_PREFIX: sk-943-
+
+jobs:
+  block-on-critical:
+    name: 0 · Block on Critical (AI Prime Tech sk-943-)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Abort push if sk-943- appears in files or git logs
+        env:
+          SECRET_PREFIX: ${{ env.PRIME_TECH_KEY_PREFIX }}
+        run: |
+          set -euo pipefail
+          echo "Critical sentinel: AI Prime Tech key prefix (${SECRET_PREFIX})"
+
+          exclude_paths=(
+            '.github/workflows/security-scan.yml'
+            "${PROJECT_DIR}/.github/gitleaks.toml"
+            "${PROJECT_DIR}/.github/workflows/security-scan.yml"
+          )
+
+          build_grep_excludes() {
+            local args=()
+            for path in "${exclude_paths[@]}"; do
+              args+=(--exclude="$path")
+            done
+            printf '%s\n' "${args[@]}"
+          )
+
+          mapfile -t grep_excludes < <(build_grep_excludes)
+
+          if matches="$(
+            git grep -n -F "$SECRET_PREFIX" -- . \
+              ':(exclude)node_modules' \
+              ':(exclude).git' \
+              ':(exclude)dist' \
+              ':(exclude).github/workflows/security-scan.yml' \
+              ":(exclude)${PROJECT_DIR}/.github/gitleaks.toml" \
+              2>/dev/null || true
+          )"; then
+            if [ -n "$matches" ]; then
+              echo "::error::CRITICAL: AI Prime Tech key prefix detected in tracked files."
+              echo "$matches"
+              exit 1
+            fi
+          fi
+
+          if matches="$(
+            grep -RIn -F "$SECRET_PREFIX" . \
+              --exclude-dir=node_modules \
+              --exclude-dir=.git \
+              --exclude-dir=dist \
+              "${grep_excludes[@]}" \
+              2>/dev/null || true
+          )"; then
+            if [ -n "$matches" ]; then
+              echo "::error::CRITICAL: AI Prime Tech key prefix detected in workspace."
+              echo "$matches"
+              exit 1
+            fi
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ] && [ -n "${{ github.event.before }}" ]; then
+            log_range="${{ github.event.before }}..${{ github.sha }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            log_range="${{ github.event.pull_request.base.sha }}..${{ github.sha }}"
+          else
+            log_range="HEAD"
+          fi
+
+          if git log --format=%B "$log_range" 2>/dev/null | grep -Fq "$SECRET_PREFIX"; then
+            echo "::error::CRITICAL: AI Prime Tech key prefix detected in commit messages/logs ($log_range)."
+            exit 1
+          fi
+
+          if git log -p "$log_range" 2>/dev/null | grep -Fq "$SECRET_PREFIX"; then
+            echo "::error::CRITICAL: AI Prime Tech key prefix detected in patch/log output ($log_range)."
+            exit 1
+          fi
+
+          echo "No ${SECRET_PREFIX} leaks detected in files or logs."
+
+  gitleaks:
+    name: 1 · Gitleaks Secret Scan (sk-943-)
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks (AI Prime Tech sk-943- rule)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: ${{ env.PROJECT_DIR }}/.github/gitleaks.toml
+
+  tracked-env-files:
+    name: 2 · Block Tracked Env Files
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail if .env files are tracked
+        run: |
+          set -euo pipefail
+          matches="$(git ls-files | grep -E '(^|/)\.env(\.|$)' || true)"
+          if [ -n "$matches" ]; then
+            echo "::error::Tracked .env files detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No tracked .env files."
+
+  tracked-key-material:
+    name: 3 · Block Tracked Key Material
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail if PEM/KEY/P12/PFX files are tracked
+        run: |
+          set -euo pipefail
+          matches="$(git ls-files | grep -E '\.(pem|key|p12|pfx)$' || true)"
+          if [ -n "$matches" ]; then
+            echo "::error::Tracked key material detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No tracked key material."
+
+  agent-secrets-perimeter:
+    name: 4 · Agent Secrets Perimeter
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail if agent secret directories are tracked
+        run: |
+          set -euo pipefail
+          matches="$(git ls-files | grep -E '(^|/)\.(agents|cursor)/secrets/' || true)"
+          if [ -n "$matches" ]; then
+            echo "::error::Tracked agent secret paths detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "Agent secrets directories are not tracked."
+
+  gitignore-hardening:
+    name: 5 · Gitignore Hardening Contract
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required gitignore patterns
+        run: |
+          set -euo pipefail
+          file="${{ env.PROJECT_DIR }}/.gitignore"
+          test -f "$file"
+          required=(
+            '.env'
+            '.env.*.local'
+            '*.pem'
+            '*.key'
+            '.agents/secrets/'
+            '.cursor/secrets/'
+          )
+          for pattern in "${required[@]}"; do
+            if ! grep -Fq "$pattern" "$file"; then
+              echo "::error::Missing gitignore pattern: $pattern"
+              exit 1
+            fi
+          done
+          echo "Gitignore hardening contract satisfied."
+
+  npm-audit:
+    name: 6 · NPM Audit (production)
+    needs: block-on-critical
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm ci
+
+      - name: Audit production dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm audit --omit=dev --audit-level=high
