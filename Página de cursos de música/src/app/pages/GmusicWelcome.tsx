@@ -4,7 +4,6 @@ import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../componen
 import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
 import {
   DashboardGrid,
-  DashboardSection,
   DashboardShell,
   WelcomeHeroCard,
   PracticeCard,
@@ -29,7 +28,7 @@ type AudioState = "pending" | "granted" | "denied";
 
 const DAILY_QUOTE =
   "La constancia le gana al talento cuando el talento no practica.";
-const PRACTICE_WEEK_LINE = "Semana 3 · Ritmo y acordes base";
+const HERO_CONTEXT_LINE = "Tu estudio · Semana 3";
 
 export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
   const [audioState, setAudioState] = useState<AudioState>("pending");
@@ -107,72 +106,72 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
       />
 
       <DashboardShell>
-        {dashboard.status === "error" && (
-          <DashboardSection className="mb-4 lg:mb-5">
-            <DashboardErrorBanner message={dashboard.message} onRetry={dashboard.retry} />
-          </DashboardSection>
-        )}
-
-        <DashboardSection className="mb-4 lg:mb-5">
-          <WelcomeHeroCard
-            userName={isLoading ? "…" : (viewModel?.userName ?? "…")}
-            practiceWeekLine={PRACTICE_WEEK_LINE}
-            streakLabel={isLoading ? "…" : (viewModel?.streakLabel ?? "—")}
-            audioLabel={audioLabel}
-            audioState={audioState}
-            isCheckingPermission={isCheckingPermission}
-            onRequestAudio={handleRequestAudio}
-          />
-        </DashboardSection>
-
-        {dashboard.status !== "error" && (
-          <DashboardSection className="mb-6 lg:mb-7">
-            {isLoading ? (
-              <PracticeCard
-                title="Cargando práctica…"
-                typeLabel="Conectando con tu estudio"
-                description="Estamos preparando tu próxima sesión."
-                onContinue={goToCamino}
-                isLoading
-              />
-            ) : viewModel?.pathComplete ? (
-              <CompletedPathCard onViewPath={goToCamino} />
-            ) : viewModel?.nextPractice ? (
-              <PracticeCard
-                title={viewModel.nextPractice.title}
-                typeLabel={viewModel.nextPractice.typeLabel}
-                description={viewModel.nextPractice.description}
-                onContinue={goToCamino}
-              />
-            ) : null}
-          </DashboardSection>
-        )}
-
-        {dashboard.status !== "error" && (
-          <DashboardGrid className="mb-6 lg:mb-7">
-            <MetricCard
-              variant="progress"
-              icon={TrendingUp}
-              eyebrow="Progreso del módulo"
-              value={isLoading ? "…" : (viewModel?.progressPercentLabel ?? "—")}
-              suffix="completado"
-              progressPercent={isLoading ? 0 : (viewModel?.progressPercent ?? 0)}
-              nodeTitle={isLoading ? "…" : (viewModel?.currentNodeTitle ?? "—")}
-              phaseLabel={isLoading ? "…" : (viewModel?.phaseLabel ?? "—")}
-            />
-            <MetricCard
-              variant="xp"
-              icon={Activity}
-              eyebrow="XP y constancia"
-              xpTotal={isLoading ? 0 : (viewModel?.xpTotal ?? 0)}
-              weeklyGain={isLoading ? 0 : (viewModel?.weeklyGain ?? 0)}
-              consistencyStatus={isLoading ? "…" : (viewModel?.consistencyStatus ?? "—")}
-            />
-            <QuoteCard quote={DAILY_QUOTE} />
-          </DashboardGrid>
-        )}
-
         <DashboardGrid>
+          {dashboard.status === "error" && (
+            <div className="lg:col-span-12">
+              <DashboardErrorBanner message={dashboard.message} onRetry={dashboard.retry} />
+            </div>
+          )}
+
+          <div className="lg:col-span-12">
+            <WelcomeHeroCard
+              userName={isLoading ? "…" : (viewModel?.userName ?? "…")}
+              practiceWeekLine={HERO_CONTEXT_LINE}
+              streakLabel={isLoading ? "…" : (viewModel?.streakLabel ?? "—")}
+              audioLabel={audioLabel}
+              audioState={audioState}
+              isCheckingPermission={isCheckingPermission}
+              onRequestAudio={handleRequestAudio}
+            />
+          </div>
+
+          {dashboard.status !== "error" && (
+            <div className="lg:col-span-12">
+              {isLoading ? (
+                <PracticeCard
+                  title="Cargando práctica…"
+                  typeLabel="Conectando con tu estudio"
+                  description="Estamos preparando tu próxima sesión."
+                  onContinue={goToCamino}
+                  isLoading
+                />
+              ) : viewModel?.pathComplete ? (
+                <CompletedPathCard onViewPath={goToCamino} />
+              ) : viewModel?.nextPractice ? (
+                <PracticeCard
+                  title={viewModel.nextPractice.title}
+                  typeLabel={viewModel.nextPractice.typeLabel}
+                  description={viewModel.nextPractice.description}
+                  onContinue={goToCamino}
+                />
+              ) : null}
+            </div>
+          )}
+
+          {dashboard.status !== "error" && (
+            <>
+              <MetricCard
+                variant="progress"
+                icon={TrendingUp}
+                eyebrow="Progreso del módulo"
+                value={isLoading ? "…" : (viewModel?.progressPercentLabel ?? "—")}
+                suffix="completado"
+                progressPercent={isLoading ? 0 : (viewModel?.progressPercent ?? 0)}
+                nodeTitle={isLoading ? "…" : (viewModel?.currentNodeTitle ?? "—")}
+                phaseLabel={isLoading ? "…" : (viewModel?.phaseLabel ?? "—")}
+              />
+              <MetricCard
+                variant="xp"
+                icon={Activity}
+                eyebrow="XP y constancia"
+                xpTotal={isLoading ? 0 : (viewModel?.xpTotal ?? 0)}
+                weeklyGain={isLoading ? 0 : (viewModel?.weeklyGain ?? 0)}
+                consistencyStatus={isLoading ? "…" : (viewModel?.consistencyStatus ?? "—")}
+              />
+              <QuoteCard quote={DAILY_QUOTE} />
+            </>
+          )}
+
           <div className="lg:col-span-6">
             <LockedFeatureCard
               icon={Target}

@@ -21,7 +21,7 @@ export function CompletedPathCard({ onViewPath }: CompletedPathCardProps) {
           "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(201, 168, 76, 0.05) inset, 0 1px 0 rgba(201, 168, 76, 0.1) inset",
       }}
     >
-      <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+      <div className="flex w-full flex-col items-center text-center">
         <p
           className="text-[10px] uppercase tracking-[0.25em] mb-4 font-bold"
           style={{ color: "rgba(201, 168, 76, 0.65)" }}
