@@ -16,6 +16,10 @@ import {
 } from "../components/gmusic/dashboard";
 import { GM_BG, GM_TEXT } from "../components/gmusic/tokens";
 import { useDashboard } from "../hooks/useDashboard";
+import {
+  deriveWelcomeHeaderSubtitle,
+  resolveStudentDisplayName,
+} from "../utils/student-zone-identity";
 
 interface GmusicWelcomeProps {
   setPage: (page: string) => void;
@@ -79,6 +83,10 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
 
   const isLoading = dashboard.status === "loading";
   const viewModel = dashboard.status === "success" ? dashboard.viewModel : null;
+  const headerUserName = resolveStudentDisplayName(
+    isLoading ? undefined : viewModel?.userName
+  );
+  const headerUserSubtitle = deriveWelcomeHeaderSubtitle(viewModel?.phaseLabel, isLoading);
 
   return (
     <div
@@ -92,6 +100,8 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
     >
       <GmusicInternalHeader
         activeNav="estudio"
+        userName={headerUserName}
+        userSubtitle={headerUserSubtitle}
         setPage={setPage}
         onPlaceholder={handleNavPlaceholder}
       />

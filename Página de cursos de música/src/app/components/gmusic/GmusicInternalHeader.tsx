@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Guitar, Menu, Lock } from "lucide-react";
+import { Guitar, Home, Menu, Lock } from "lucide-react";
 import { GM_GOLD, GM_SURFACE, GM_TEXT, GM_TEXT_SEC } from "./tokens";
-import { MOCK_USER, getUserPathLabel } from "../../data/mock-user";
+import { deriveStudentInitials } from "../../utils/student-zone-identity";
 
 export type GmusicNavId = "estudio" | "camino" | "progreso" | "comunidad";
 export type GmusicLockedNavId = "progreso" | "comunidad";
@@ -18,6 +18,8 @@ export function isLockedNav(id: string): id is GmusicLockedNavId {
 
 interface GmusicInternalHeaderProps {
   activeNav: GmusicNavId;
+  userName: string;
+  userSubtitle: string;
   setPage: (page: string) => void;
   onPlaceholder: (key: string) => void;
 }
@@ -36,8 +38,20 @@ const NAV_ITEMS: {
 
 const HEADER_BORDER = "rgba(255, 255, 255, 0.08)";
 
-export function GmusicInternalHeader({ activeNav, setPage, onPlaceholder }: GmusicInternalHeaderProps) {
+export function GmusicInternalHeader({
+  activeNav,
+  userName,
+  userSubtitle,
+  setPage,
+  onPlaceholder,
+}: GmusicInternalHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const initials = deriveStudentInitials(userName);
+
+  const navigateHome = () => {
+    setMobileMenuOpen(false);
+    setPage("home");
+  };
 
   const handleNav = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.page) setPage(item.page);
@@ -64,6 +78,12 @@ export function GmusicInternalHeader({ activeNav, setPage, onPlaceholder }: Gmus
     </span>
   );
 
+  const homeButtonStyle = {
+    color: GM_TEXT_SEC,
+    background: "rgba(255, 255, 255, 0.04)",
+    border: `1px solid ${HEADER_BORDER}`,
+  } as const;
+
   return (
     <header
       className="sticky top-0 z-50 border-b"
@@ -89,6 +109,16 @@ export function GmusicInternalHeader({ activeNav, setPage, onPlaceholder }: Gmus
             <span className="font-semibold text-lg tracking-tight text-white">
               Gmusic <span style={{ color: GM_GOLD, fontWeight: 500 }}>Estudio</span>
             </span>
+            <button
+              type="button"
+              onClick={navigateHome}
+              className="hidden md:inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors cursor-pointer"
+              style={homeButtonStyle}
+              aria-label="Inicio"
+            >
+              <Home className="w-4 h-4 shrink-0" style={{ color: GM_GOLD }} aria-hidden />
+              Inicio
+            </button>
           </div>
 
           <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-6">
@@ -130,14 +160,14 @@ export function GmusicInternalHeader({ activeNav, setPage, onPlaceholder }: Gmus
                   border: "1px solid rgba(212, 175, 55, 0.2)",
                 }}
               >
-                {MOCK_USER.initials}
+                {initials}
               </div>
               <div className="text-left leading-tight">
                 <div className="text-sm font-medium" style={{ color: GM_TEXT }}>
-                  {MOCK_USER.name}
+                  {userName}
                 </div>
                 <div className="text-[11px] mt-0.5" style={{ color: GM_TEXT_SEC }}>
-                  {getUserPathLabel()}
+                  {userSubtitle}
                 </div>
               </div>
             </div>
@@ -175,16 +205,25 @@ export function GmusicInternalHeader({ activeNav, setPage, onPlaceholder }: Gmus
               className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
               style={{ background: "rgba(212,175,55,0.12)", color: GM_GOLD }}
             >
-              {MOCK_USER.initials}
+              {initials}
             </div>
             <div>
-              <div className="font-medium text-sm">{MOCK_USER.name}</div>
+              <div className="font-medium text-sm">{userName}</div>
               <div className="text-xs mt-0.5" style={{ color: GM_TEXT_SEC }}>
-                {getUserPathLabel()}
+                {userSubtitle}
               </div>
             </div>
           </div>
           <div className="space-y-1">
+            <button
+              type="button"
+              onClick={navigateHome}
+              className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium min-h-[44px] transition-colors inline-flex items-center gap-2"
+              style={{ color: GM_TEXT_SEC }}
+            >
+              <Home className="w-4 h-4 shrink-0" style={{ color: GM_GOLD }} aria-hidden />
+              Inicio
+            </button>
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}

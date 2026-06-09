@@ -21,6 +21,7 @@ import { usePath } from "../hooks/usePath";
 import { useStartLessonSession } from "../hooks/useStartLessonSession";
 import { findPathNodeById } from "../services/gmusic-api/map-path";
 import type { PathNodeData } from "../data/gmusic-path-types";
+import { derivePathHeaderIdentity } from "../utils/student-zone-identity";
 
 interface GmusicPathProps {
   setPage: (page: string) => void;
@@ -78,6 +79,7 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
 
   const mp = modalProps();
   const isLoading = path.status === "loading";
+  const headerIdentity = derivePathHeaderIdentity(viewModel?.badge, isLoading);
   const panelNode = viewModel ? findPathNodeById(viewModel.modules, selectedNodeId) : null;
   const canStartLesson = canStartLessonFromNode(panelNode);
   const panelSession = resolveLessonSessionForPanel(lessonSession, panelNode?.id);
@@ -161,6 +163,8 @@ export function GmusicPath({ setPage }: GmusicPathProps) {
     <div className="min-h-screen" style={{ background: GM_BG, color: GM_TEXT }}>
       <GmusicInternalHeader
         activeNav="camino"
+        userName={headerIdentity.userName}
+        userSubtitle={headerIdentity.userSubtitle}
         setPage={setPage}
         onPlaceholder={openNavPlaceholder}
       />
