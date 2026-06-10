@@ -4,10 +4,7 @@ import { DisciplinePhrase } from "../components/dashboard/DisciplinePhrase";
 import { ExerciseEngine } from "../components/dashboard/ExerciseEngine";
 import { CofreVirtual } from "../components/dashboard/CofreVirtual";
 import { VideoPlayerLesson } from "../components/dashboard/VideoPlayerLesson";
-
-const GOLD = "#C9A84C";
-const WHITE_WARM = "#F5F0E8";
-const BORDER = "rgba(255,255,255,0.06)";
+import { GOLD, WHITE_WARM, BORDER } from "../components/marketing/tokens";
 
 interface LessonPageProps {
   setPage: (page: string) => void;

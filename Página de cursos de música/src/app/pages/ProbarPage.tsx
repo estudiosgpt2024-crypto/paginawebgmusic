@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-
-const GOLD = "#C9A84C";
-const GOLD_SOFT = "#E8C97A";
-const WHITE_WARM = "#F5F0E8";
-const TEXT_SEC = "#8A8A8A";
+import { GOLD, GOLD_SOFT, WHITE_WARM, TEXT_SEC } from "../components/marketing/tokens";
+import { navigateToHomeSection } from "../utils/public-home-navigation";
 
 interface ProbarPageProps {
   setPage?: (page: string) => void;
@@ -179,7 +176,7 @@ export function ProbarPage({ setPage }: ProbarPageProps) {
               <motion.button
                 whileHover={{ background: GOLD_SOFT, boxShadow: "0 10px 32px rgba(201,168,76,0.35)" }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setPage("dashboard")}
+                onClick={() => navigateToHomeSection(setPage, "planes")}
                 style={{
                   width: "100%", height: 50, marginTop: 20, borderRadius: 2,
                   background: GOLD, color: "#080808",

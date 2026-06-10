@@ -8,10 +8,7 @@ import { CofreVirtual } from "../components/dashboard/CofreVirtual";
 import { RankingWidget } from "../components/dashboard/RankingWidget";
 import { VideollamadaWidget } from "../components/dashboard/VideollamadaWidget";
 import { VideoPlayer } from "../components/dashboard/VideoPlayer";
-
-const GOLD = "#C9A84C";
-const WHITE_WARM = "#F5F0E8";
-const BORDER = "rgba(255,255,255,0.06)";
+import { GOLD, WHITE_WARM, BORDER } from "../components/marketing/tokens";
 
 // Mock student data
 const STUDENT = {

@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { DisciplinePhrase } from "./DisciplinePhrase";
-
-const GOLD = "#C9A84C";
-const WHITE_WARM = "#F5F0E8";
-const BORDER = "rgba(255,255,255,0.06)";
+import { GOLD, WHITE_WARM, BORDER } from "../marketing/tokens";
 
 const LESSONS = [
   { id: 1, title: "Postura y agarre correcto", duration: "7 min", done: true },

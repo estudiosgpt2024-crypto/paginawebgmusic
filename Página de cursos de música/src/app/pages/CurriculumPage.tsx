@@ -2,10 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { PaywallModal } from "../components/dashboard/PaywallModal";
 import { AmbientBackground } from "../components/dashboard/AmbientBackground";
-
-const GOLD = "#C9A84C";
-const WHITE_WARM = "#F5F0E8";
-const BORDER = "rgba(255,255,255,0.06)";
+import { GOLD, WHITE_WARM, BORDER } from "../components/marketing/tokens";
 
 type NodeStatus = "done" | "current" | "premium" | "locked";
 
