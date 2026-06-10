@@ -48,3 +48,26 @@ describe("R3.3D — sesión pública y logout", () => {
     assert.equal(navbarSource.includes("logoutProcessing"), true);
   });
 });
+
+describe("R3.3E — redirección suave home → Mi Estudio", () => {
+  it("App declara useRef para hasAppliedAuthenticatedLandingRef", () => {
+    assert.match(appSource, /hasAppliedAuthenticatedLandingRef/);
+    assert.match(appSource, /useRef\(false\)/);
+  });
+
+  it("useEffect de redirección depende de publicSession.status y currentPage", () => {
+    assert.match(
+      appSource,
+      /hasAppliedAuthenticatedLandingRef[\s\S]*publicSession\.status[\s\S]*mi-estudio/
+    );
+  });
+
+  it("redirección usa handlePageChange, no setCurrentPage directamente", () => {
+    assert.match(appSource, /handlePageChange\("mi-estudio"\)/);
+  });
+
+  it("no usa localStorage ni sessionStorage para el flag de redirección", () => {
+    assert.equal(appSource.includes("localStorage"), false);
+    assert.equal(appSource.includes("sessionStorage"), false);
+  });
+});

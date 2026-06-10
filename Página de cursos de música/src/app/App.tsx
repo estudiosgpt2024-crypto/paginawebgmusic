@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { TRACKS, ALBUMS, COURSES } from "./data/music-data";
 import { Navbar } from "./components/music/Navbar";
 import { MusicPlayer } from "./components/music/MusicPlayer";
 import { GmusicLanding } from "./pages/GmusicLanding";
 import { GmusicWelcome } from "./pages/GmusicWelcome";
 import { GmusicPath } from "./pages/GmusicPath";
+import { PathDemoPage } from "./pages/PathDemoPage";
 import { StudentZoneGuard } from "./components/gmusic/StudentZoneGuard";
 import { CoursesPage } from "./pages/legacy/AlbumCoursesPages";
 import { AlbumPage } from "./pages/legacy/AlbumCoursesPages";
@@ -70,6 +71,7 @@ export default function App() {
   const [logoutProcessing, setLogoutProcessing] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const publicSession = usePublicStudentSession();
+  const hasAppliedAuthenticatedLandingRef = useRef(false);
 
   // Music player functions
   const onPlay = (track: Track) => { setCurrentTrack(track); setPlaying(true); };
@@ -195,13 +197,28 @@ export default function App() {
     return cleanup;
   }, []);
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = useCallback((page: string) => {
     navigateStudentZoneAware(page, setCurrentPage, currentPage);
-  };
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (hasAppliedAuthenticatedLandingRef.current) return;
+    if (publicSession.status === "loading") return;
+    if (
+      publicSession.status === "authenticated" &&
+      currentPage === "home" &&
+      window.location.pathname === "/"
+    ) {
+      hasAppliedAuthenticatedLandingRef.current = true;
+      handlePageChange("mi-estudio");
+    } else {
+      hasAppliedAuthenticatedLandingRef.current = true;
+    }
+  }, [publicSession.status, currentPage, handlePageChange]);
 
   return (
     <div style={{ fontFamily:"'Inter','Outfit',sans-serif", background:"#080808", minHeight:"100vh", color:"#fff" }}>
-      {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino"].includes(currentPage) &&
+      {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino","mi-camino-demo"].includes(currentPage) &&
         !isPublicFreeLessonPage(currentPage) && (
         <Navbar
           currentPage={currentPage}
@@ -242,6 +259,10 @@ export default function App() {
         <StudentZoneGuard setPage={handlePageChange} currentPage={currentPage}>
           <GmusicPath setPage={handlePageChange} />
         </StudentZoneGuard>
+      )}
+
+      {currentPage === "mi-camino-demo" && (
+        <PathDemoPage setPage={handlePageChange} />
       )}
 
       {currentPage === "album" && selectedAlbum && (
@@ -334,7 +355,7 @@ export default function App() {
         registrationOnly={pendingSemestralCheckout}
       />
 
-      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && currentPage !== "mi-camino" && !isPublicFreeLessonPage(currentPage) && (
+      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && currentPage !== "mi-camino" && currentPage !== "mi-camino-demo" && !isPublicFreeLessonPage(currentPage) && (
         <MusicPlayer
           track={currentTrack}
           playlist={playlist}
