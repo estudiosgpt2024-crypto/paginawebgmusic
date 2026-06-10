@@ -186,8 +186,8 @@ describe("InteractiveLevelSelector — Academia 3x3 A2.2", () => {
     assert.equal(selectorSource.includes("focusTitle"), true);
   });
 
-  it("Fundamento Básico abre fundamento-free-lesson", () => {
-    assert.equal(selectorSource.includes(`setPage(PUBLIC_FREE_LESSON_PAGE)`), true);
+  it("Fundamento Básico abre el camino demo público", () => {
+    assert.equal(selectorSource.includes('setPage("mi-camino-demo")'), true);
     assert.equal(selectorSource.includes("isFreeClassTrack"), true);
     assertNoForbiddenNavigation(selectorSource, "InteractiveLevelSelector");
   });

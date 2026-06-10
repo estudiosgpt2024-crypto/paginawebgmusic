@@ -16,6 +16,7 @@ interface PathNodeProps {
   stepIndex: number;
   isSelected?: boolean;
   onSelect?: (node: PathNodeData) => void;
+  allowLockedSelection?: boolean;
 }
 
 function NodeMarker({ node }: { node: PathNodeData }) {
@@ -105,13 +106,19 @@ function NodeMarker({ node }: { node: PathNodeData }) {
   );
 }
 
-export function PathNode({ node, stepIndex, isSelected = false, onSelect }: PathNodeProps) {
+export function PathNode({
+  node,
+  stepIndex,
+  isSelected = false,
+  onSelect,
+  allowLockedSelection = false,
+}: PathNodeProps) {
   const { status, lane, title, type, duration } = node;
   const isLocked = status === "locked";
   const isActive = status === "active";
   const isAvailable = status === "available";
   const isCompleted = status === "completed";
-  const isSelectable = isActive || isAvailable;
+  const isSelectable = isActive || isAvailable || (allowLockedSelection && isLocked);
   const typeLabel = NODE_TYPE_LABELS[type];
 
   const justify =

@@ -4,7 +4,6 @@ import {
   ACADEMIA_TIERS,
   getTracksForTier,
   isFreeClassTrack,
-  PUBLIC_FREE_LESSON_PAGE,
   type AcademiaTierId,
   type AcademiaTrackCombination,
 } from "../../utils/academia-track-matrix";
@@ -28,7 +27,7 @@ export function InteractiveLevelSelector({
   const handleStart = (track: AcademiaTrackCombination) => {
     if (!isFreeClassTrack(track)) return;
     setLevel(track.focusId);
-    setPage(PUBLIC_FREE_LESSON_PAGE);
+    setPage("mi-camino-demo");
   };
 
   return (

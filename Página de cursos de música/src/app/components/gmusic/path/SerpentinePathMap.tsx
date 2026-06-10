@@ -11,6 +11,7 @@ export interface SerpentinePathMapProps {
   selectedNodeId?: string | null;
   onLevelingChallenge: () => void;
   onNodeSelect?: (node: PathNodeData) => void;
+  allowLockedSelection?: boolean;
 }
 
 export function SerpentinePathMap({
@@ -19,6 +20,7 @@ export function SerpentinePathMap({
   selectedNodeId,
   onLevelingChallenge,
   onNodeSelect,
+  allowLockedSelection = false,
 }: SerpentinePathMapProps) {
   const activeRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +71,7 @@ export function SerpentinePathMap({
                       stepIndex={i + 1}
                       isSelected={isSelected}
                       onSelect={onNodeSelect}
+                      allowLockedSelection={allowLockedSelection}
                     />
                   </div>
                 );
