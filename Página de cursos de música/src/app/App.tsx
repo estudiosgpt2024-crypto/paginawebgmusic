@@ -246,6 +246,7 @@ export default function App() {
           setAlbum={setSelectedAlbum}
           setLevel={setSelectedLevel}
           onSelectSemestralPlan={handleSemestralPlanSelect}
+          session={publicSession}
         />
       )}
 

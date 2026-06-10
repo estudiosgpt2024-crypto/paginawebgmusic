@@ -1,14 +1,12 @@
 import { motion } from "motion/react";
-import { PUBLIC_FREE_LESSON_PAGE } from "../../../utils/academia-track-matrix";
 import { SEMESTRAL_PLAN_NAME } from "../../../utils/public-subscription-flow";
-import { GOLD, GOLD_SOFT, WHITE_WARM, TEXT_SEC, BG_SURFACE, BORDER, fadeUp, vp } from "../tokens";
+import { GOLD, WHITE_WARM, TEXT_SEC, BG_SURFACE, BORDER, fadeUp, vp } from "../tokens";
 
 interface PlanesSectionProps {
-  setPage: (page: string) => void;
   onSelectSemestralPlan: () => void;
 }
 
-export function PlanesSection({ setPage, onSelectSemestralPlan }: PlanesSectionProps) {
+export function PlanesSection({ onSelectSemestralPlan }: PlanesSectionProps) {
   const planes = [
     { nombre: "Mensual", tag: null, selectable: false },
     { nombre: SEMESTRAL_PLAN_NAME, tag: "El más elegido", selectable: true },
@@ -114,26 +112,6 @@ export function PlanesSection({ setPage, onSelectSemestralPlan }: PlanesSectionP
           })}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={vp} transition={{ duration: 0.5, delay: 0.2 }}
-          style={{ textAlign: "center", marginTop: 48 }}
-        >
-          <motion.button
-            whileHover={{ background: GOLD_SOFT, boxShadow: "0 10px 32px rgba(201,168,76,0.35)" }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setPage(PUBLIC_FREE_LESSON_PAGE)}
-            style={{
-              height: 50, padding: "0 40px", borderRadius: 2,
-              background: GOLD, color: "#080808", fontSize: 13, fontWeight: 700,
-              border: "none", cursor: "pointer", letterSpacing: "1px",
-              textTransform: "uppercase", fontFamily: "Inter, sans-serif",
-              boxShadow: "0 4px 20px rgba(201,168,76,0.2)",
-            }}
-          >
-            Ver clase gratuita
-          </motion.button>
-        </motion.div>
       </div>
     </section>
   );

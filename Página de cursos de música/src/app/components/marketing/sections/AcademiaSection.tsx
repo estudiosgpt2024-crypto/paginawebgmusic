@@ -1,13 +1,17 @@
 import { motion } from "motion/react";
 import { InteractiveLevelSelector } from "../../music/InteractiveLevelSelector";
-import { GOLD, WHITE_WARM, TEXT_SEC, fadeUp, vp } from "../tokens";
+import { GOLD, GOLD_SOFT, WHITE_WARM, TEXT_SEC, fadeUp, vp } from "../tokens";
+import { useDemoUserState } from "../../../hooks/useDemoUserState";
+import type { PublicStudentSessionState } from "../../../hooks/usePublicStudentSession";
 
 interface AcademiaSectionProps {
   setPage: (page: string) => void;
   setLevel: (level: string) => void;
+  session: PublicStudentSessionState;
 }
 
-export function AcademiaSection({ setPage, setLevel }: AcademiaSectionProps) {
+export function AcademiaSection({ setPage, setLevel, session }: AcademiaSectionProps) {
+  const cta = useDemoUserState(session.status);
   return (
     <section id="academia" style={{
       position: "relative", background: "#0D0D0D",
@@ -56,17 +60,27 @@ export function AcademiaSection({ setPage, setLevel }: AcademiaSectionProps) {
           <InteractiveLevelSelector setPage={setPage} setLevel={setLevel} />
         </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-          viewport={vp} transition={{ duration: 0.5, delay: 0.3 }}
-          style={{
-            marginTop: 20, fontSize: 12, color: "rgba(255,255,255,0.2)",
-            fontFamily: "Inter, sans-serif", letterSpacing: "0.3px",
-          }}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={vp} transition={{ duration: 0.5, delay: 0.25 }}
+          style={{ marginTop: 40 }}
         >
-          Elige tu punto de partida dentro de la academia y comienza con la clase
-          gratuita de Fundamento.
-        </motion.p>
+          <motion.button
+            whileHover={{ background: GOLD_SOFT, boxShadow: "0 8px 32px rgba(201,168,76,0.35)" }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setPage(cta.destination)}
+            style={{
+              height: 50, padding: "0 36px", borderRadius: 2,
+              background: GOLD, color: "#080808", fontSize: 13, fontWeight: 700,
+              border: "none", cursor: "pointer", letterSpacing: "1px",
+              textTransform: "uppercase", fontFamily: "Inter, sans-serif",
+              boxShadow: "0 4px 20px rgba(201,168,76,0.22)",
+            }}
+          >
+            {cta.label}
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

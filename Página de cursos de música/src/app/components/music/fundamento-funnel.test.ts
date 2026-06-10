@@ -124,12 +124,16 @@ describe("academia-track-matrix — modelo 3x3", () => {
   });
 });
 
-describe("HeroSection — funnel público A2.2", () => {
-  it("Ver clase gratuita navega directamente a fundamento-free-lesson", () => {
-    assert.equal(heroSource.includes("Ver clase gratuita"), true);
-    assert.equal(heroSource.includes("PUBLIC_FREE_LESSON_PAGE"), true);
-    assert.equal(heroSource.includes(`setPage(PUBLIC_FREE_LESSON_PAGE)`), true);
-    assert.equal(PUBLIC_FREE_LESSON_PAGE, "fundamento-free-lesson");
+describe("HeroSection — funnel público v3 (embudo demo)", () => {
+  it("no muestra 'Ver clase gratuita' — embudo pasa por Academia", () => {
+    assert.equal(heroSource.includes("Ver clase gratuita"), false);
+    assert.equal(heroSource.includes("PUBLIC_FREE_LESSON_PAGE"), false);
+    assert.equal(heroSource.includes(`setPage(PUBLIC_FREE_LESSON_PAGE)`), false);
+  });
+
+  it("solo muestra 'Conocer academia' como CTA principal", () => {
+    assert.equal(heroSource.includes("Conocer academia"), true);
+    assert.equal(heroSource.includes('scrollTo("academia")'), true);
   });
 
   it("no usa Probar gratis ni rutas prohibidas", () => {
@@ -138,22 +142,16 @@ describe("HeroSection — funnel público A2.2", () => {
   });
 });
 
-describe("PlanesSection — funnel público A2.2", () => {
-  it("Ver clase gratuita navega directamente a fundamento-free-lesson", () => {
-    assert.equal(planesSource.includes("Ver clase gratuita"), true);
-    assert.equal(planesSource.includes("PUBLIC_FREE_LESSON_PAGE"), true);
-    assert.equal(planesSource.includes(`setPage(PUBLIC_FREE_LESSON_PAGE)`), true);
-    assert.equal(PUBLIC_FREE_LESSON_PAGE, "fundamento-free-lesson");
+describe("PlanesSection — funnel público v3 (embudo demo)", () => {
+  it("no muestra 'Ver clase gratuita' — sección Planes es informativa", () => {
+    assert.equal(planesSource.includes("Ver clase gratuita"), false);
+    assert.equal(planesSource.includes("PUBLIC_FREE_LESSON_PAGE"), false);
+    assert.equal(planesSource.includes(`setPage(PUBLIC_FREE_LESSON_PAGE)`), false);
   });
 
-  it("Semestral dispara registro y no la clase gratuita", () => {
+  it("Semestral sigue disparando registro via onSelectSemestralPlan", () => {
     assert.equal(planesSource.includes("onSelectSemestralPlan"), true);
     assert.match(planesSource, /Semestral[\s\S]*onSelectSemestralPlan/);
-    assert.equal(planesSource.includes('setPage(PUBLIC_FREE_LESSON_PAGE)'), true);
-    assert.match(
-      planesSource,
-      /onSelectSemestralPlan[\s\S]*Ver clase gratuita|Ver clase gratuita[\s\S]*onSelectSemestralPlan/
-    );
   });
 
   it("no usa Probar gratis ni rutas prohibidas", () => {
@@ -165,7 +163,13 @@ describe("PlanesSection — funnel público A2.2", () => {
 describe("AcademiaSection — copy y aislamiento legacy", () => {
   it("no habla de elegir instrumento", () => {
     assert.equal(academiaSource.includes("instrumento"), false);
-    assert.equal(academiaSource.includes("punto de partida dentro de la academia"), true);
+    assert.equal(academiaSource.includes("punto de partida"), true);
+  });
+
+  it("tiene CTA dinámico via useDemoUserState", () => {
+    assert.equal(academiaSource.includes("useDemoUserState"), true);
+    assert.equal(academiaSource.includes("cta.label"), true);
+    assert.equal(academiaSource.includes("cta.destination"), true);
   });
 
   it("no navega a páginas legacy ni preview", () => {
