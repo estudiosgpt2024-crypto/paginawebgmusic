@@ -6,6 +6,15 @@ export interface DashboardPracticeView {
   description: string;
 }
 
+export interface DashboardWeeklyChestView {
+  exercisesUntilChest: number | null;
+  xpReward: number;
+  isReady: boolean;
+}
+
+export const WEEKLY_XP_GOAL = 200;
+export const WEEKLY_CHEST_XP_REWARD = 50;
+
 export interface DashboardViewModel {
   userName: string;
   streakLabel: string;
@@ -18,16 +27,28 @@ export interface DashboardViewModel {
   phaseLabel: string;
   nextPractice: DashboardPracticeView | null;
   pathComplete: boolean;
-}
-
-export function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(100, Math.max(0, value));
+  weeklyChest: DashboardWeeklyChestView | null;
 }
 
 export function nonNegative(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, value);
+}
+
+export function deriveWeeklyChest(weeklyGain: number): DashboardWeeklyChestView {
+  const gain = nonNegative(weeklyGain);
+  const remaining = Math.max(0, WEEKLY_XP_GOAL - gain);
+
+  return {
+    exercisesUntilChest: remaining > 0 ? remaining : null,
+    xpReward: WEEKLY_CHEST_XP_REWARD,
+    isReady: remaining === 0,
+  };
+}
+
+export function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, value));
 }
 
 export function derivePhaseLabel(levelLabel: string, pathLabel: string): string {
@@ -60,5 +81,6 @@ export function mapDashboardToViewModel(response: DashboardResponse): DashboardV
         }
       : null,
     pathComplete: response.nextPractice === null,
+    weeklyChest: deriveWeeklyChest(weeklyGain),
   };
 }

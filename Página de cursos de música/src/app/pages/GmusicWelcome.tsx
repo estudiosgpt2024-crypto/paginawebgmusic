@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Target, Dumbbell, TrendingUp, Activity } from "lucide-react";
 import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../components/gmusic/GmusicInternalHeader";
 import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
@@ -12,6 +12,8 @@ import {
   MetricCard,
   QuoteCard,
   LockedFeatureCard,
+  WeeklyChestCelebrationShell,
+  type WeeklyChestCelebrationState,
 } from "../components/gmusic/dashboard";
 import { GM_BG, GM_TEXT } from "../components/gmusic/tokens";
 import { useDashboard } from "../hooks/useDashboard";
@@ -34,7 +36,19 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
   const [audioState, setAudioState] = useState<AudioState>("pending");
   const [isCheckingPermission, setIsCheckingPermission] = useState(true);
   const [showLockedModal, setShowLockedModal] = useState(false);
+  const [chestState, setChestState] = useState<WeeklyChestCelebrationState>({ status: "idle" });
+  const [chestOpen, setChestOpen] = useState(false);
+  const chestTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const dashboard = useDashboard();
+
+  const clearChestTimers = useCallback(() => {
+    for (const timerId of chestTimersRef.current) {
+      clearTimeout(timerId);
+    }
+    chestTimersRef.current = [];
+  }, []);
+
+  useEffect(() => () => clearChestTimers(), [clearChestTimers]);
 
   const handleNavPlaceholder = (key: string) => {
     if (isLockedNav(key)) setShowLockedModal(true);
@@ -86,6 +100,31 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
     isLoading ? undefined : viewModel?.userName
   );
   const headerUserSubtitle = deriveWelcomeHeaderSubtitle(viewModel?.phaseLabel, isLoading);
+
+  const handleOpenChest = useCallback(() => {
+    const xpReward = viewModel?.weeklyChest?.xpReward ?? 50;
+    clearChestTimers();
+    setChestOpen(true);
+    setChestState({ status: "opening" });
+    const revealTimer = setTimeout(() => {
+      setChestState({ status: "reward-revealed", xpReward });
+    }, 700);
+    chestTimersRef.current.push(revealTimer);
+  }, [clearChestTimers, viewModel?.weeklyChest?.xpReward]);
+
+  const handleChestClose = useCallback(
+    (open: boolean) => {
+      if (open) return;
+      clearChestTimers();
+      setChestState({ status: "closing" });
+      setChestOpen(false);
+      const resetTimer = setTimeout(() => {
+        setChestState({ status: "idle" });
+      }, 300);
+      chestTimersRef.current.push(resetTimer);
+    },
+    [clearChestTimers]
+  );
 
   return (
     <div
@@ -167,6 +206,8 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
                 xpTotal={isLoading ? 0 : (viewModel?.xpTotal ?? 0)}
                 weeklyGain={isLoading ? 0 : (viewModel?.weeklyGain ?? 0)}
                 consistencyStatus={isLoading ? "…" : (viewModel?.consistencyStatus ?? "—")}
+                exercisesUntilChest={viewModel?.weeklyChest?.exercisesUntilChest ?? undefined}
+                onChestClick={viewModel?.weeklyChest?.isReady ? handleOpenChest : undefined}
               />
               <QuoteCard quote={DAILY_QUOTE} />
             </>
@@ -195,6 +236,12 @@ export function GmusicWelcome({ setPage }: GmusicWelcomeProps) {
         title={LOCKED_NAV_MODAL.title}
         subtitle={LOCKED_NAV_MODAL.subtitle}
         footer={LOCKED_NAV_MODAL.footer}
+      />
+
+      <WeeklyChestCelebrationShell
+        state={chestState}
+        open={chestOpen}
+        onOpenChange={handleChestClose}
       />
     </div>
   );

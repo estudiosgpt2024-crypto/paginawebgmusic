@@ -25,6 +25,7 @@ export type XpMetricCardProps = MetricCardBaseProps & {
   weeklyGain: number;
   consistencyStatus: string;
   exercisesUntilChest?: number;
+  onChestClick?: () => void;
 };
 
 export type MetricCardProps = ProgressMetricCardProps | XpMetricCardProps;
@@ -98,11 +99,21 @@ export function MetricCard(props: MetricCardProps) {
               Constancia:{" "}
               <span className="font-semibold text-[#C9A84C]">{props.consistencyStatus}</span>
             </p>
-            <p className="text-[12px] leading-relaxed" style={{ color: "rgba(160,160,165,0.8)" }}>
-              {props.exercisesUntilChest != null
-                ? `Faltan ${props.exercisesUntilChest} ejercicios para abrir tu cofre semanal.`
-                : "Tu actividad semanal se refleja en el XP que acumulas."}
-            </p>
+            {props.onChestClick ? (
+              <button
+                type="button"
+                onClick={props.onChestClick}
+                className="mt-1 cursor-pointer rounded-lg border border-[rgba(201,168,76,0.28)] bg-[rgba(201,168,76,0.08)] px-3 py-2 text-[12px] font-semibold text-[#C9A84C] transition-colors hover:bg-[rgba(201,168,76,0.14)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A84C]"
+              >
+                Abrir cofre 🎁
+              </button>
+            ) : (
+              <p className="text-[12px] leading-relaxed" style={{ color: "rgba(160,160,165,0.8)" }}>
+                {props.exercisesUntilChest != null
+                  ? `Faltan ${props.exercisesUntilChest} ejercicios para abrir tu cofre semanal.`
+                  : "Tu actividad semanal se refleja en el XP que acumulas."}
+              </p>
+            )}
           </div>
         </div>
         <div

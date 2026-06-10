@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   clampPercent,
   derivePhaseLabel,
+  deriveWeeklyChest,
   mapDashboardToViewModel,
   nonNegative,
 } from "./map-dashboard";
@@ -54,6 +55,11 @@ describe("mapDashboardToViewModel", () => {
     assert.equal(viewModel.phaseLabel, "Fundamento · Mes 2");
     assert.equal(viewModel.nextPractice?.title, "Tu primer rasgueo en 4/4");
     assert.equal(viewModel.pathComplete, false);
+    assert.deepEqual(viewModel.weeklyChest, {
+      exercisesUntilChest: 20,
+      xpReward: 50,
+      isReady: false,
+    });
   });
 
   it("marca pathComplete cuando nextPractice es null", () => {
@@ -82,6 +88,37 @@ describe("mapDashboardToViewModel", () => {
     assert.equal(viewModel.weeklyGain, 0);
     assert.equal(viewModel.progressPercent, 100);
     assert.equal(viewModel.progressPercentLabel, "100%");
+  });
+});
+
+describe("deriveWeeklyChest", () => {
+  it("marca isReady false y cuenta regresiva cuando falta XP semanal", () => {
+    assert.deepEqual(deriveWeeklyChest(180), {
+      exercisesUntilChest: 20,
+      xpReward: 50,
+      isReady: false,
+    });
+  });
+
+  it("marca isReady true cuando la meta semanal está cumplida", () => {
+    assert.deepEqual(deriveWeeklyChest(200), {
+      exercisesUntilChest: null,
+      xpReward: 50,
+      isReady: true,
+    });
+    assert.deepEqual(deriveWeeklyChest(250), {
+      exercisesUntilChest: null,
+      xpReward: 50,
+      isReady: true,
+    });
+  });
+
+  it("normaliza weeklyGain negativo a meta completa", () => {
+    assert.deepEqual(deriveWeeklyChest(-10), {
+      exercisesUntilChest: 200,
+      xpReward: 50,
+      isReady: false,
+    });
   });
 });
 
