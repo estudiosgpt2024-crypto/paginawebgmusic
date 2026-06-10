@@ -5,14 +5,14 @@ import { PathPageIntro } from "../components/gmusic/path/PathPageIntro";
 import { SerpentinePathMap } from "../components/gmusic/path/SerpentinePathMap";
 import { ActiveNodePanel } from "../components/gmusic/path/ActiveNodePanel";
 import { Button } from "../components/ui/button";
-import { PATH_MODULES } from "../data/gmusic-path-data";
-import type { NodeStatus, PathModuleData, PathNodeData } from "../data/gmusic-path-types";
+import { DEMO_LESSONS } from "../data/demo-lessons";
+import { useDemoProgress } from "../hooks/useDemoProgress";
+import type { PathModuleData, PathNodeData, PathLane } from "../data/gmusic-path-types";
 import { countPathProgress } from "../data/gmusic-path-types";
 import { GM_BG, GM_BORDER, GM_GOLD, GM_SURFACE, GM_TEXT, GM_TEXT_SEC } from "../components/gmusic/tokens";
 import { navigateToHomeSection } from "../utils/public-home-navigation";
-import { PUBLIC_FREE_LESSON_PAGE } from "../utils/academia-track-matrix";
 
-export const DEMO_PATH_NODE_ID = "demo-n1";
+export const DEMO_PATH_NODE_ID = "demo-node-1";
 
 const DEMO_BADGE = {
   instrument: "Guitarra",
@@ -20,39 +20,47 @@ const DEMO_BADGE = {
   level: "Fundamento",
 } as const;
 
-export function buildDemoModules(source: PathModuleData[]): PathModuleData[] {
-  let firstNodeSeen = false;
+const DEMO_LANES: PathLane[] = ["center", "right", "center", "left", "center"];
 
-  return source.map((mod) => ({
-    ...mod,
-    nodes: mod.nodes.map((node) => {
-      if (!firstNodeSeen) {
-        firstNodeSeen = true;
-        return {
-          ...node,
-          id: DEMO_PATH_NODE_ID,
-          status: "active" as NodeStatus,
-          title: "Tu guitarra y postura",
-          typeLabel: "Lección · 7 min",
-          description:
-            "Aprende la postura correcta y el primer contacto con la guitarra. Sin requisitos previos.",
-        };
-      }
+export function buildDemoModules(completedLessons: number[]): PathModuleData[] {
+  const nextLessonNumber = completedLessons.length + 1;
 
-      return { ...node, status: "locked" as NodeStatus };
-    }),
-  }));
+  const nodes: PathNodeData[] = DEMO_LESSONS.map((lesson, index) => {
+    const { lessonNumber, title, videoDuration, objective } = lesson;
+    const status =
+      completedLessons.includes(lessonNumber)
+        ? ("completed" as const)
+        : lessonNumber === nextLessonNumber
+        ? ("active" as const)
+        : ("locked" as const);
+
+    return {
+      id: `demo-node-${lessonNumber}`,
+      title,
+      type: "video" as const,
+      status,
+      lane: DEMO_LANES[index] ?? "center",
+      duration: videoDuration,
+      typeLabel: `Lección · ${videoDuration}`,
+      description: objective,
+    };
+  });
+
+  return [
+    {
+      id: "demo-module-1",
+      index: 1,
+      title: "Mundo 1 — Fundamento",
+      focus: "Las bases de la guitarra",
+      nodes,
+    },
+  ];
 }
 
-function findDemoNodeById(modules: PathModuleData[], nodeId: string | null): PathNodeData | null {
+function getLessonNumberFromNodeId(nodeId: string | null): number | null {
   if (!nodeId) return null;
-
-  for (const mod of modules) {
-    const node = mod.nodes.find((entry) => entry.id === nodeId);
-    if (node) return node;
-  }
-
-  return null;
+  const match = /^demo-node-(\d)$/.exec(nodeId);
+  return match && match[1] ? parseInt(match[1], 10) : null;
 }
 
 interface LockedDemoNodePanelProps {
@@ -85,7 +93,7 @@ function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePane
         {title}
       </h2>
       <p className="text-sm mb-6 leading-relaxed" style={{ color: GM_TEXT_SEC }}>
-        Esta clase está disponible con el plan Semestral de Gmusic Estudio.
+        Esta clase se desbloquea al completar las anteriores.
       </p>
       <Button
         onClick={onViewPlans}
@@ -98,6 +106,98 @@ function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePane
   );
 }
 
+interface CompletedDemoNodePanelProps {
+  compact?: boolean;
+  lessonNumber: number;
+  title: string;
+  onGoToNext: () => void;
+}
+
+function CompletedDemoNodePanel({
+  compact,
+  lessonNumber,
+  title,
+  onGoToNext,
+}: CompletedDemoNodePanelProps) {
+  return (
+    <div
+      className={`rounded-lg border p-5 md:p-6 ${compact ? "" : "lg:sticky lg:top-6"}`}
+      style={{
+        background: GM_SURFACE,
+        borderColor: GM_BORDER,
+        borderLeftWidth: 3,
+        borderLeftColor: "rgba(88, 204, 2, 0.35)",
+      }}
+    >
+      <p
+        className="text-[10px] font-medium tracking-[0.2em] uppercase mb-3"
+        style={{ color: "rgba(88, 204, 2, 0.65)" }}
+      >
+        Completada · Clase {lessonNumber} de 5
+      </p>
+      <h2
+        className={`font-medium mb-2 leading-snug ${compact ? "text-lg" : "text-xl"}`}
+        style={{ color: GM_TEXT, fontFamily: "'Playfair Display', Georgia, serif" }}
+      >
+        {title}
+      </h2>
+      <p className="text-sm mb-6 leading-relaxed" style={{ color: GM_TEXT_SEC }}>
+        ¡Clase superada! Continúa con la siguiente para avanzar en tu camino.
+      </p>
+      <Button
+        onClick={onGoToNext}
+        className="w-full font-medium min-h-[44px] tracking-wide"
+        style={{ background: GM_GOLD, color: "#0A0A0A" }}
+      >
+        Continuar al mapa
+      </Button>
+    </div>
+  );
+}
+
+interface DemoFinishedPanelProps {
+  compact?: boolean;
+  onInscribirse: () => void;
+}
+
+function DemoFinishedPanel({ compact, onInscribirse }: DemoFinishedPanelProps) {
+  return (
+    <div
+      className={`rounded-lg border p-5 md:p-6 ${compact ? "" : "lg:sticky lg:top-6"}`}
+      style={{
+        background: GM_SURFACE,
+        borderColor: GM_BORDER,
+        borderLeftWidth: 3,
+        borderLeftColor: "rgba(201, 168, 76, 0.5)",
+      }}
+    >
+      <p
+        className="text-[10px] font-medium tracking-[0.2em] uppercase mb-3"
+        style={{ color: "rgba(201, 168, 76, 0.7)" }}
+      >
+        Mundo 1 completado
+      </p>
+      <h2
+        className={`font-medium mb-2 leading-snug ${compact ? "text-lg" : "text-xl"}`}
+        style={{ color: GM_TEXT, fontFamily: "'Playfair Display', Georgia, serif" }}
+      >
+        ¡Completaste el Mundo 1!
+      </h2>
+      <p className="text-sm mb-6 leading-relaxed" style={{ color: GM_TEXT_SEC }}>
+        Has terminado las 5 clases gratuitas. Elige un plan para continuar con
+        el camino completo de la academia.
+      </p>
+      <Button
+        onClick={onInscribirse}
+        className="w-full font-medium min-h-[44px] tracking-wide"
+        style={{ background: GM_GOLD, color: "#0A0A0A" }}
+      >
+        Elegir mi plan
+      </Button>
+    </div>
+  );
+}
+
 interface PathDemoPageProps {
   setPage: (page: string) => void;
 }
@@ -105,13 +205,26 @@ interface PathDemoPageProps {
 type ModalKind = "leveling" | "locked" | null;
 
 export function PathDemoPage({ setPage }: PathDemoPageProps) {
-  const [modal, setModal] = useState<ModalKind>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string>(DEMO_PATH_NODE_ID);
+  const { completedLessons, demoFinished, nextLessonNumber } = useDemoProgress();
 
-  const demoModules = useMemo(() => buildDemoModules(PATH_MODULES), []);
+  const activeNodeId = demoFinished ? null : `demo-node-${nextLessonNumber}`;
+  const [modal, setModal] = useState<ModalKind>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => activeNodeId);
+
+  const demoModules = useMemo(
+    () => buildDemoModules(completedLessons),
+    [completedLessons]
+  );
   const progress = useMemo(() => countPathProgress(demoModules), [demoModules]);
-  const selectedNode = findDemoNodeById(demoModules, selectedNodeId);
-  const isDemoNode = selectedNode?.id === DEMO_PATH_NODE_ID;
+
+  const selectedNode = useMemo((): PathNodeData | null => {
+    if (!selectedNodeId) return null;
+    for (const mod of demoModules) {
+      const node = mod.nodes.find((n) => n.id === selectedNodeId);
+      if (node) return node;
+    }
+    return null;
+  }, [demoModules, selectedNodeId]);
 
   const openNavPlaceholder = useCallback((key: string) => {
     if (isLockedNav(key)) setModal("locked");
@@ -146,29 +259,53 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
   const mp = modalProps();
 
   const renderSidePanel = (compact?: boolean) => {
+    if (demoFinished) {
+      return (
+        <DemoFinishedPanel
+          compact={compact}
+          onInscribirse={() => setPage("inscripcion-gate")}
+        />
+      );
+    }
+
     if (!selectedNode) {
+      const firstLesson = DEMO_LESSONS[0];
       return (
         <ActiveNodePanel
           compact={compact}
-          eyebrow="Clase gratuita"
-          title="Tu guitarra y postura"
-          typeLabel="Lección · 7 min"
-          description="Aprende la postura correcta y el primer contacto con la guitarra."
-          onStartLesson={() => setPage(PUBLIC_FREE_LESSON_PAGE)}
+          eyebrow="Clase gratuita · 1 de 5"
+          title={firstLesson?.title ?? ""}
+          typeLabel={`Lección · ${firstLesson?.videoDuration ?? ""}`}
+          description={firstLesson?.objective ?? ""}
+          onStartLesson={() => setPage("demo-clase-1")}
           startLessonDisabled={false}
         />
       );
     }
 
-    if (isDemoNode) {
+    const lessonNumber = getLessonNumberFromNodeId(selectedNode.id);
+    const lesson = lessonNumber ? DEMO_LESSONS[lessonNumber - 1] : null;
+
+    if (selectedNode.status === "completed" && lessonNumber) {
+      return (
+        <CompletedDemoNodePanel
+          compact={compact}
+          lessonNumber={lessonNumber}
+          title={selectedNode.title}
+          onGoToNext={() => setSelectedNodeId(activeNodeId)}
+        />
+      );
+    }
+
+    if (selectedNode.status === "active" && lessonNumber && lesson) {
       return (
         <ActiveNodePanel
           compact={compact}
-          eyebrow="Clase gratuita"
-          title="Tu guitarra y postura"
-          typeLabel="Lección · 7 min"
-          description="Aprende la postura correcta y el primer contacto con la guitarra."
-          onStartLesson={() => setPage(PUBLIC_FREE_LESSON_PAGE)}
+          eyebrow={`Clase gratuita · ${lessonNumber} de 5`}
+          title={lesson.title}
+          typeLabel={`Lección · ${lesson.videoDuration}`}
+          description={lesson.objective}
+          onStartLesson={() => setPage(`demo-clase-${lessonNumber}`)}
           startLessonDisabled={false}
         />
       );
@@ -196,7 +333,7 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 lg:py-12">
         <PathPageIntro
           badge={DEMO_BADGE}
-          completedSteps={0}
+          completedSteps={progress.completed}
           totalSteps={progress.total}
           isLoading={false}
         />
@@ -207,8 +344,8 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
           <div className="lg:col-span-7">
             <SerpentinePathMap
               modules={demoModules}
-              activeNodeId={DEMO_PATH_NODE_ID}
-              selectedNodeId={selectedNodeId}
+              activeNodeId={activeNodeId ?? ""}
+              selectedNodeId={selectedNodeId ?? ""}
               onLevelingChallenge={() => setModal("leveling")}
               onNodeSelect={handleNodeSelect}
               allowLockedSelection

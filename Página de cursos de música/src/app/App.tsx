@@ -6,6 +6,9 @@ import { GmusicLanding } from "./pages/GmusicLanding";
 import { GmusicWelcome } from "./pages/GmusicWelcome";
 import { GmusicPath } from "./pages/GmusicPath";
 import { PathDemoPage } from "./pages/PathDemoPage";
+import { DemoLessonPage } from "./pages/DemoLessonPage";
+import { InscripcionGatePage } from "./pages/InscripcionGatePage";
+import { InscripcionRegistroPage } from "./pages/InscripcionRegistroPage";
 import { StudentZoneGuard } from "./components/gmusic/StudentZoneGuard";
 import { CoursesPage } from "./pages/legacy/AlbumCoursesPages";
 import { AlbumPage } from "./pages/legacy/AlbumCoursesPages";
@@ -216,10 +219,16 @@ export default function App() {
     }
   }, [publicSession.status, currentPage, handlePageChange]);
 
+  const demoLessonId = (() => {
+    const m = /^demo-clase-([1-5])$/.exec(currentPage);
+    return m && m[1] ? parseInt(m[1], 10) : null;
+  })();
+
   return (
     <div style={{ fontFamily:"'Inter','Outfit',sans-serif", background:"#080808", minHeight:"100vh", color:"#fff" }}>
-      {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino","mi-camino-demo"].includes(currentPage) &&
-        !isPublicFreeLessonPage(currentPage) && (
+      {!["curriculum","lesson","dashboard","welcome","mi-estudio","mi-camino","mi-camino-demo","inscripcion-gate","inscripcion-registro"].includes(currentPage) &&
+        !isPublicFreeLessonPage(currentPage) &&
+        demoLessonId === null && (
         <Navbar
           currentPage={currentPage}
           setPage={handlePageChange}
@@ -264,6 +273,18 @@ export default function App() {
 
       {currentPage === "mi-camino-demo" && (
         <PathDemoPage setPage={handlePageChange} />
+      )}
+
+      {demoLessonId !== null && (
+        <DemoLessonPage lessonId={demoLessonId} setPage={handlePageChange} />
+      )}
+
+      {currentPage === "inscripcion-gate" && (
+        <InscripcionGatePage setPage={handlePageChange} />
+      )}
+
+      {currentPage === "inscripcion-registro" && (
+        <InscripcionRegistroPage setPage={handlePageChange} />
       )}
 
       {currentPage === "album" && selectedAlbum && (
@@ -356,7 +377,7 @@ export default function App() {
         registrationOnly={pendingSemestralCheckout}
       />
 
-      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && currentPage !== "mi-camino" && currentPage !== "mi-camino-demo" && !isPublicFreeLessonPage(currentPage) && (
+      {currentPage !== "home" && currentPage !== "probar" && currentPage !== "dashboard" && currentPage !== "lesson" && currentPage !== "curriculum" && currentPage !== "welcome" && currentPage !== "mi-estudio" && currentPage !== "mi-camino" && currentPage !== "mi-camino-demo" && currentPage !== "inscripcion-gate" && currentPage !== "inscripcion-registro" && !isPublicFreeLessonPage(currentPage) && demoLessonId === null && (
         <MusicPlayer
           track={currentTrack}
           playlist={playlist}
