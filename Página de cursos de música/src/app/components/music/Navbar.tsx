@@ -1,5 +1,7 @@
 import { useState, useEffect, type CSSProperties } from "react";
 import { GM_GOLD } from "../gmusic/tokens";
+import type { PublicStudentSessionState } from "../../hooks/usePublicStudentSession";
+
 const WHITE_WARM = "#F5F0E8";
 const BORDER = "rgba(255,255,255,0.06)";
 
@@ -8,9 +10,26 @@ interface NavbarProps {
   setPage?: (page: string) => void;
   onSignIn?: () => void;
   onRegister?: () => void;
+  session?: PublicStudentSessionState;
+  onGoToStudio?: () => void;
+  onLogout?: () => void | Promise<void>;
+  onRetrySession?: () => void | Promise<void>;
+  logoutError?: string | null;
+  logoutProcessing?: boolean;
 }
 
-export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarProps) {
+export function Navbar({
+  currentPage,
+  setPage,
+  onSignIn,
+  onRegister,
+  session = { status: "anonymous" },
+  onGoToStudio,
+  onLogout,
+  onRetrySession,
+  logoutError = null,
+  logoutProcessing = false,
+}: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -37,13 +56,23 @@ export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarPro
   const scrollToSection = (id: string) => {
     if (currentPage && currentPage !== "home" && setPage) {
       setPage("home");
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const el = document.getElementById(id);
-        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 80, behavior: "smooth" });
-      }, 100);
+        if (el) {
+          window.scrollTo({
+            top: el.getBoundingClientRect().top + window.pageYOffset - 80,
+            behavior: "smooth",
+          });
+        }
+      });
     } else {
       const el = document.getElementById(id);
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 80, behavior: "smooth" });
+      if (el) {
+        window.scrollTo({
+          top: el.getBoundingClientRect().top + window.pageYOffset - 80,
+          behavior: "smooth",
+        });
+      }
     }
     setMenuOpen(false);
   };
@@ -70,15 +99,51 @@ export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarPro
     fontFamily: "Inter,sans-serif",
   });
 
-  const renderAuthControls = (stacked = false) => (
+  const authShellStyle: CSSProperties = {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+    flexShrink: 0,
+    minHeight: 36,
+    minWidth: 220,
+    justifyContent: "flex-end",
+  };
+
+  const renderLoadingAuth = (stacked = false) => (
     <div
       className="gmusic-ctas"
       style={{
-        display: "flex",
-        gap: 10,
-        alignItems: stacked ? "stretch" : "center",
+        ...authShellStyle,
         flexDirection: stacked ? "column" : "row",
-        flexShrink: 0,
+        width: stacked ? "100%" : undefined,
+      }}
+      aria-hidden="true"
+    >
+      <div
+        style={{
+          width: stacked ? "100%" : 108,
+          height: 36,
+          borderRadius: 2,
+          background: "rgba(255,255,255,0.06)",
+        }}
+      />
+      <div
+        style={{
+          width: stacked ? "100%" : 108,
+          height: 36,
+          borderRadius: 2,
+          background: "rgba(255,255,255,0.08)",
+        }}
+      />
+    </div>
+  );
+
+  const renderAnonymousAuth = (stacked = false) => (
+    <div
+      className="gmusic-ctas"
+      style={{
+        ...authShellStyle,
+        flexDirection: stacked ? "column" : "row",
         width: stacked ? "100%" : undefined,
       }}
     >
@@ -98,6 +163,76 @@ export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarPro
       </button>
     </div>
   );
+
+  const renderAuthenticatedAuth = (stacked = false) => (
+    <div
+      className="gmusic-ctas"
+      style={{
+        ...authShellStyle,
+        flexDirection: stacked ? "column" : "row",
+        alignItems: stacked ? "stretch" : "center",
+        width: stacked ? "100%" : undefined,
+      }}
+    >
+      <span
+        style={{
+          color: WHITE_WARM,
+          fontSize: 13,
+          fontWeight: 500,
+          maxWidth: stacked ? "100%" : 160,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {session.status === "authenticated" ? session.user.name : ""}
+      </span>
+      <button
+        type="button"
+        onClick={onGoToStudio}
+        disabled={logoutProcessing}
+        style={{ ...authButtonStyle(true), width: stacked ? "100%" : undefined }}
+      >
+        Mi Estudio
+      </button>
+      <button
+        type="button"
+        onClick={() => void onLogout?.()}
+        disabled={logoutProcessing}
+        style={{ ...authButtonStyle(false), width: stacked ? "100%" : undefined }}
+      >
+        {logoutProcessing ? "Cerrando…" : "Cerrar sesión"}
+      </button>
+    </div>
+  );
+
+  const renderSessionAuth = (stacked = false) => {
+    if (session.status === "loading") return renderLoadingAuth(stacked);
+    if (session.status === "authenticated") return renderAuthenticatedAuth(stacked);
+    if (session.status === "error") {
+      return (
+        <div
+          style={{
+            ...authShellStyle,
+            flexDirection: stacked ? "column" : "row",
+            width: stacked ? "100%" : undefined,
+          }}
+        >
+          <span style={{ color: "#fca5a5", fontSize: 12, maxWidth: 180 }}>
+            {session.message}
+          </span>
+          <button
+            type="button"
+            onClick={() => void onRetrySession?.()}
+            style={{ ...authButtonStyle(false), width: stacked ? "100%" : undefined }}
+          >
+            Reintentar
+          </button>
+        </div>
+      );
+    }
+    return renderAnonymousAuth(stacked);
+  };
 
   return (
     <>
@@ -143,7 +278,14 @@ export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarPro
             })}
           </nav>
 
-          {renderAuthControls()}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            {renderSessionAuth()}
+            {logoutError && (
+              <span role="alert" style={{ color: "#fca5a5", fontSize: 11, maxWidth: 280, textAlign: "right" }}>
+                {logoutError}
+              </span>
+            )}
+          </div>
 
           <button className="gmusic-hamburger" onClick={() => setMenuOpen(!menuOpen)}
             style={{ display: "none", background: "none", border: "none", cursor: "pointer", padding: 8, color: "#fff" }}>
@@ -169,7 +311,12 @@ export function Navbar({ currentPage, setPage, onSignIn, onRegister }: NavbarPro
                 borderBottom: "1px solid rgba(255,255,255,0.04)",
               }}>{label}</button>
             ))}
-            {renderAuthControls(true)}
+            {renderSessionAuth(true)}
+            {logoutError && (
+              <span role="alert" style={{ color: "#fca5a5", fontSize: 12, marginTop: 8 }}>
+                {logoutError}
+              </span>
+            )}
           </div>
         )}
       </header>

@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { User } from "@prisma/client";
 import { Role } from "@prisma/client";
 import { config } from "../config.js";
-import { resolveDevStudentEmail } from "../lib/devStudentCookie.js";
+import { resolveDevStudentSession } from "../lib/devStudentCookie.js";
 import { ApiError, errorBody } from "../lib/errors.js";
 import { prisma } from "../lib/prisma.js";
 
@@ -30,7 +30,7 @@ export async function devStudentAuth(req: Request, res: Response, next: NextFunc
       );
     }
 
-    const resolution = resolveDevStudentEmail(req.headers.cookie);
+    const resolution = resolveDevStudentSession(req.headers.cookie);
 
     if (resolution.kind === "invalid_cookie") {
       return res.status(401).json(
@@ -38,8 +38,14 @@ export async function devStudentAuth(req: Request, res: Response, next: NextFunc
       );
     }
 
+    if (resolution.kind === "logged_out") {
+      return res.status(401).json(
+        errorBody("UNAUTHORIZED", "Sesión cerrada.")
+      );
+    }
+
     const email =
-      resolution.kind === "resolved" ? resolution.email : config.devStudentEmail;
+      resolution.kind === "student" ? resolution.email : config.devStudentEmail;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -49,7 +55,7 @@ export async function devStudentAuth(req: Request, res: Response, next: NextFunc
       return res.status(401).json(
         errorBody(
           "UNAUTHORIZED",
-          resolution.kind === "resolved"
+          resolution.kind === "student"
             ? "Alumno de la sesión de desarrollo no encontrado."
             : `Alumno de desarrollo no encontrado (${config.devStudentEmail}). Ejecuta npm run db:seed.`
         )
@@ -60,7 +66,7 @@ export async function devStudentAuth(req: Request, res: Response, next: NextFunc
       return res.status(403).json(
         errorBody(
           "FORBIDDEN",
-          resolution.kind === "resolved"
+          resolution.kind === "student"
             ? "La sesión de desarrollo solo puede representar un usuario STUDENT."
             : "GMUSIC_DEV_USER_EMAIL debe apuntar a un usuario STUDENT."
         )

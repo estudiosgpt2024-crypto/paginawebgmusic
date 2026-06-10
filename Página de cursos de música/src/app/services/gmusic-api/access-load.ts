@@ -5,6 +5,7 @@ import type { AccessReason, AccessSubscription, AccessUser } from "./types";
 export type AccessLoadOutcome =
   | { type: "allowed"; user: AccessUser; subscription: AccessSubscription }
   | { type: "denied"; user: AccessUser; reason: AccessReason }
+  | { type: "unauthenticated" }
   | { type: "error"; message: string }
   | { type: "aborted" };
 
@@ -49,6 +50,9 @@ export async function loadAccessOnce(
     };
   } catch (error) {
     if (isAbortError(error) || signal.aborted) return { type: "aborted" };
+    if (error instanceof GmusicApiError && error.status === 401) {
+      return { type: "unauthenticated" };
+    }
     const message =
       error instanceof GmusicApiError
         ? error.message

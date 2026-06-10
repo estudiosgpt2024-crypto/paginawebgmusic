@@ -88,6 +88,16 @@ describe("loadAccessOnce", () => {
     }
   });
 
+  it("401 UNAUTHORIZED se interpreta como no autenticado para la zona privada", async () => {
+    const outcome = await loadAccessOnce(new AbortController().signal, {
+      fetchAccess: async () => {
+        throw new GmusicApiError("Sesión cerrada.", 401, "UNAUTHORIZED");
+      },
+    });
+
+    assert.equal(outcome.type, "unauthenticated");
+  });
+
   it("retry exitoso reemplaza estado error", async () => {
     let attempts = 0;
     const fetchAccess = async () => {

@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, it } from "node:test";
+
+const root = dirname(fileURLToPath(import.meta.url));
+const appSource = readFileSync(join(root, "../App.tsx"), "utf8");
+const navbarSource = readFileSync(join(root, "../components/music/Navbar.tsx"), "utf8");
+
+describe("R3.3D — sesión pública y logout", () => {
+  it("App comparte usePublicStudentSession con Navbar y refresca tras checkout", () => {
+    assert.equal(appSource.includes("usePublicStudentSession"), true);
+    assert.equal(appSource.includes("session={publicSession}"), true);
+    assert.match(appSource, /activateSemestralWithAccessVerification[\s\S]*publicSession\.refresh/);
+    assert.equal(appSource.includes("postDevLogout"), true);
+    assert.match(appSource, /postDevLogout[\s\S]*publicSession\.refresh/);
+  });
+
+  it("Navbar anónimo muestra Iniciar sesión y Regístrate", () => {
+    assert.equal(navbarSource.includes("Iniciar sesión"), true);
+    assert.equal(navbarSource.includes("Regístrate"), true);
+    assert.equal(navbarSource.includes("renderAnonymousAuth"), true);
+  });
+
+  it("Navbar autenticado muestra nombre, Mi Estudio y Cerrar sesión", () => {
+    assert.equal(navbarSource.includes("Mi Estudio"), true);
+    assert.equal(navbarSource.includes("Cerrar sesión"), true);
+    assert.equal(navbarSource.includes('session.status === "authenticated"'), true);
+    assert.equal(navbarSource.includes("Carlos"), false);
+    assert.equal(navbarSource.includes("MOCK_USER"), false);
+  });
+
+  it("logout confirmado navega a home y no usa almacenamiento local", () => {
+    assert.match(appSource, /sessionOutcome\.type !== "anonymous"/);
+    assert.equal(appSource.includes('handlePageChange("home")'), true);
+    assert.equal(appSource.includes('handlePageChange("fundamento-free-lesson")'), false);
+    for (const source of [appSource, navbarSource]) {
+      assert.equal(source.includes("localStorage"), false);
+      assert.equal(source.includes("sessionStorage"), false);
+    }
+  });
+
+  it("fallo de logout conserva sesión visible y permite reintentar", () => {
+    assert.equal(appSource.includes("setLogoutError"), true);
+    assert.equal(appSource.includes("shouldAcceptLogoutSubmission"), true);
+    assert.equal(navbarSource.includes("logoutError"), true);
+    assert.equal(navbarSource.includes("logoutProcessing"), true);
+  });
+});

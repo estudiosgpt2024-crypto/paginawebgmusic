@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { devActivationGate } from "../lib/devActivationGate.js";
 import {
-  buildDevStudentSessionClearCookie,
+  buildDevStudentLoggedOutSessionCookie,
   buildDevStudentSessionCookie,
 } from "../lib/devStudentCookie.js";
 import { parseActivateSemestralBody } from "../lib/parseActivateSemestralBody.js";
@@ -26,6 +26,6 @@ devRouter.post("/activate-semestral", async (req, res, next) => {
 
 devRouter.post("/logout", (_req, res) => {
   res.set("Cache-Control", "no-store");
-  res.append("Set-Cookie", buildDevStudentSessionClearCookie());
+  res.append("Set-Cookie", buildDevStudentLoggedOutSessionCookie());
   res.status(204).send();
 });

@@ -4,14 +4,18 @@ import request from "supertest";
 import { createApp } from "../app.js";
 import {
   buildDevStudentCookieHeaderValue,
-  buildDevStudentSessionClearCookie,
+  buildDevStudentLoggedOutCookieHeaderValue,
+  buildDevStudentLoggedOutSessionCookie,
   buildDevStudentSessionCookie,
   DEV_STUDENT_COOKIE_NAME,
   DEV_STUDENT_COOKIE_PATH,
+  DEV_STUDENT_SESSION_LOGGED_OUT_BODY,
   parseCookieHeader,
-  resolveDevStudentEmail,
+  resolveDevStudentSession,
   signDevStudentCookiePayload,
+  signDevStudentSessionPayload,
   verifyDevStudentCookiePayload,
+  verifyDevStudentSessionPayload,
 } from "../lib/devStudentCookie.js";
 import {
   DEV_ACTIVATION_PLACEHOLDER,
@@ -49,6 +53,10 @@ function signedCookie(email: string, signingKey = TEST_DEV_KEY): string {
   return `${DEV_STUDENT_COOKIE_NAME}=${buildDevStudentCookieHeaderValue(email, signingKey)}`;
 }
 
+function signedLoggedOutCookie(signingKey = TEST_DEV_KEY): string {
+  return `${DEV_STUDENT_COOKIE_NAME}=${buildDevStudentLoggedOutCookieHeaderValue(signingKey)}`;
+}
+
 describe("devStudentCookie — firma HMAC", () => {
   const previousDevKey = process.env.GMUSIC_DEV_ACTIVATION_KEY;
 
@@ -65,9 +73,21 @@ describe("devStudentCookie — firma HMAC", () => {
   });
 
   it("firma y verifica email normalizado + HMAC-SHA256", () => {
-    const payload = signDevStudentCookiePayload("Juan@GMUSIC.academy", TEST_DEV_KEY);
-    assert.match(payload, /^juan@gmusic\.academy\.[a-f0-9]{64}$/);
-    assert.equal(verifyDevStudentCookiePayload(payload, TEST_DEV_KEY), "juan@gmusic.academy");
+    const payload = signDevStudentSessionPayload(
+      { kind: "student", email: "Juan@GMUSIC.academy" },
+      TEST_DEV_KEY
+    );
+    assert.match(payload, /^student:juan@gmusic\.academy\.[a-f0-9]{64}$/);
+    const verified = verifyDevStudentSessionPayload(payload, TEST_DEV_KEY);
+    assert.deepEqual(verified, { kind: "student", email: "juan@gmusic.academy" });
+  });
+
+  it("firma y verifica estado logged_out", () => {
+    const payload = signDevStudentSessionPayload({ kind: "logged_out" }, TEST_DEV_KEY);
+    assert.match(payload, /^logged_out\.[a-f0-9]{64}$/);
+    assert.deepEqual(verifyDevStudentSessionPayload(payload, TEST_DEV_KEY), {
+      kind: "logged_out",
+    });
   });
 
   it("rechaza payload manipulado, firma inválida o formato incorrecto", () => {
@@ -85,13 +105,18 @@ describe("devStudentCookie — firma HMAC", () => {
   });
 
   it("resuelve fallback cuando no hay cookie de sesión", () => {
-    const resolution = resolveDevStudentEmail("other=value");
+    const resolution = resolveDevStudentSession("other=value");
     assert.equal(resolution.kind, "fallback");
   });
 
   it("marca cookie inválida sin usar fallback", () => {
-    const resolution = resolveDevStudentEmail(`${DEV_STUDENT_COOKIE_NAME}=invalid`);
+    const resolution = resolveDevStudentSession(`${DEV_STUDENT_COOKIE_NAME}=invalid`);
     assert.equal(resolution.kind, "invalid_cookie");
+  });
+
+  it("resuelve logged_out firmado sin fallback", () => {
+    const resolution = resolveDevStudentSession(signedLoggedOutCookie());
+    assert.equal(resolution.kind, "logged_out");
   });
 });
 
@@ -121,11 +146,15 @@ describe("buildDevStudentSessionCookie", () => {
     assert.equal(cookie.includes(TEST_DEV_KEY), false);
   });
 
-  it("clear cookie usa Max-Age=0 y Expires", () => {
-    const cookie = buildDevStudentSessionClearCookie();
-    assert.match(cookie, /Max-Age=0/);
-    assert.match(cookie, /Expires=Thu, 01 Jan 1970 00:00:00 GMT/);
+  it("logged_out cookie incluye HttpOnly, SameSite=Strict, Path y Max-Age esperados", () => {
+    const cookie = buildDevStudentLoggedOutSessionCookie();
+    assert.match(cookie, /^gmusic_dev_student_email=/);
+    assert.match(cookie, /HttpOnly/);
+    assert.match(cookie, /SameSite=Strict/);
     assert.match(cookie, new RegExp(`Path=${DEV_STUDENT_COOKIE_PATH}`));
+    assert.match(cookie, /Max-Age=28800/);
+    assert.match(cookie, new RegExp(encodeURIComponent(DEV_STUDENT_SESSION_LOGGED_OUT_BODY)));
+    assert.equal(cookie.includes(TEST_DEV_KEY), false);
   });
 
   it("falla con email inválido", () => {
@@ -264,7 +293,8 @@ integration("dev student session — integración", () => {
     const rawValue = parseCookieHeader(cookieHeader).get(DEV_STUDENT_COOKIE_NAME);
     assert.ok(rawValue);
     const payload = decodeURIComponent(rawValue!);
-    assert.equal(verifyDevStudentCookiePayload(payload, TEST_DEV_KEY), SESSION_TEST_EMAIL);
+    const verified = verifyDevStudentSessionPayload(payload, TEST_DEV_KEY);
+    assert.deepEqual(verified, { kind: "student", email: SESSION_TEST_EMAIL });
   });
 
   it("cookie firmada válida permite /me/access", async () => {
@@ -364,7 +394,7 @@ integration("dev student session — integración", () => {
     assert.equal(response.body.error.code, "FORBIDDEN");
   });
 
-  it("después de logout el mismo agente usa fallback", async () => {
+  it("después de logout responde 401 sin fallback", async () => {
     await restoreUserEmailTestSnapshot(SESSION_TEST_EMAIL, {
       existed: false,
       user: null,
@@ -384,10 +414,80 @@ integration("dev student session — integración", () => {
       .post("/api/v1/dev/logout")
       .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY);
     assert.equal(logout.status, 204);
+    const logoutCookie = logout.headers["set-cookie"];
+    assert.ok(logoutCookie);
+    const cookieHeader = Array.isArray(logoutCookie) ? logoutCookie[0] : logoutCookie;
+    assert.match(cookieHeader, /HttpOnly/);
+    assert.match(cookieHeader, new RegExp(encodeURIComponent(DEV_STUDENT_SESSION_LOGGED_OUT_BODY)));
 
-    const fallbackAccess = await agent.get("/api/v1/me/access");
-    assert.equal(fallbackAccess.status, 200);
-    assert.equal(fallbackAccess.body.user.email, process.env.GMUSIC_DEV_USER_EMAIL);
+    const afterLogout = await agent.get("/api/v1/me/access");
+    assert.equal(afterLogout.status, 401);
+    assert.equal(afterLogout.body.error.code, "UNAUTHORIZED");
+  });
+
+  it("logout no modifica usuario ni suscripción", async () => {
+    await restoreUserEmailTestSnapshot(SESSION_TEST_EMAIL, {
+      existed: false,
+      user: null,
+      subscriptions: [],
+    });
+
+    const agent = request.agent(createApp());
+    await agent
+      .post("/api/v1/dev/activate-semestral")
+      .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY)
+      .send(ACTIVATE_BODY);
+
+    const before = await captureUserEmailTestSnapshot(SESSION_TEST_EMAIL);
+
+    await agent
+      .post("/api/v1/dev/logout")
+      .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY);
+
+    const after = await captureUserEmailTestSnapshot(SESSION_TEST_EMAIL);
+    assertUserEmailTestSnapshotsEqual(after, before);
+    assert.equal(after.subscriptions.length > 0, true);
+  });
+
+  it("nueva activación reemplaza logged_out y recupera acceso", async () => {
+    await restoreUserEmailTestSnapshot(SESSION_TEST_EMAIL, {
+      existed: false,
+      user: null,
+      subscriptions: [],
+    });
+
+    const agent = request.agent(createApp());
+    await agent
+      .post("/api/v1/dev/activate-semestral")
+      .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY)
+      .send(ACTIVATE_BODY);
+
+    await agent
+      .post("/api/v1/dev/logout")
+      .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY);
+
+    const denied = await agent.get("/api/v1/me/access");
+    assert.equal(denied.status, 401);
+
+    await agent
+      .post("/api/v1/dev/activate-semestral")
+      .set(DEV_ACTIVATION_HEADER, TEST_DEV_KEY)
+      .send(ACTIVATE_BODY);
+
+    const restored = await agent.get("/api/v1/me/access");
+    assert.equal(restored.status, 200);
+    assert.equal(restored.body.user.email, SESSION_TEST_EMAIL);
+    assert.equal(restored.body.access.canAccessStudentZone, true);
+  });
+
+  it("cookie logged_out responde 401 sin fallback", async () => {
+    const response = await request(createApp())
+      .get("/api/v1/me/access")
+      .set("Cookie", signedLoggedOutCookie());
+
+    assert.equal(response.status, 401);
+    assert.equal(response.body.error.code, "UNAUTHORIZED");
+    assert.notEqual(response.body.user?.email, process.env.GMUSIC_DEV_USER_EMAIL);
   });
 });
 

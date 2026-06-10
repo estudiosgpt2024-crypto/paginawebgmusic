@@ -7,9 +7,15 @@ export const DEV_STUDENT_COOKIE_MAX_AGE_SECONDS = 28800;
 export const DEV_STUDENT_EMAIL_MAX_LENGTH = 254;
 export const DEV_STUDENT_COOKIE_SIGNATURE_HEX_LENGTH = 64;
 export const DEV_STUDENT_COOKIE_MAX_PAYLOAD_LENGTH = 400;
+export const DEV_STUDENT_SESSION_LOGGED_OUT_BODY = "logged_out";
+export const DEV_STUDENT_SESSION_STUDENT_PREFIX = "student:";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SIGNATURE_HEX_RE = /^[a-f0-9]{64}$/;
+
+export type DevStudentSessionPayload =
+  | { kind: "student"; email: string }
+  | { kind: "logged_out" };
 
 function normalizeDevStudentEmail(email: string): string | null {
   const normalized = email.trim().toLowerCase();
@@ -39,8 +45,8 @@ export function parseCookieHeader(header: string | undefined): Map<string, strin
   return cookies;
 }
 
-function computeDevStudentCookieSignature(email: string, signingKey: string): string {
-  return createHmac("sha256", signingKey).update(email).digest("hex");
+function computeSessionSignature(body: string, signingKey: string): string {
+  return createHmac("sha256", signingKey).update(body).digest("hex");
 }
 
 function signaturesMatch(expectedHex: string, providedHex: string): boolean {
@@ -54,20 +60,37 @@ function signaturesMatch(expectedHex: string, providedHex: string): boolean {
   return timingSafeEqual(expectedBuffer, providedBuffer);
 }
 
-export function signDevStudentCookiePayload(email: string, signingKey: string): string {
-  const normalized = normalizeDevStudentEmail(email);
+function sessionBodyFromPayload(payload: DevStudentSessionPayload): string {
+  if (payload.kind === "logged_out") {
+    return DEV_STUDENT_SESSION_LOGGED_OUT_BODY;
+  }
+
+  const normalized = normalizeDevStudentEmail(payload.email);
   if (!normalized) {
     throw new Error("Email inválido para firmar cookie de sesión de desarrollo.");
   }
 
-  const signature = computeDevStudentCookieSignature(normalized, signingKey);
-  return `${normalized}.${signature}`;
+  return `${DEV_STUDENT_SESSION_STUDENT_PREFIX}${normalized}`;
 }
 
-export function verifyDevStudentCookiePayload(
+export function signDevStudentSessionPayload(
+  payload: DevStudentSessionPayload,
+  signingKey: string
+): string {
+  const body = sessionBodyFromPayload(payload);
+  const signature = computeSessionSignature(body, signingKey);
+  return `${body}.${signature}`;
+}
+
+/** @deprecated Usar signDevStudentSessionPayload({ kind: "student", email }, key). */
+export function signDevStudentCookiePayload(email: string, signingKey: string): string {
+  return signDevStudentSessionPayload({ kind: "student", email }, signingKey);
+}
+
+export function verifyDevStudentSessionPayload(
   rawPayload: string,
   signingKey: string
-): string | null {
+): DevStudentSessionPayload | null {
   if (!rawPayload || rawPayload.length > DEV_STUDENT_COOKIE_MAX_PAYLOAD_LENGTH) {
     return null;
   }
@@ -81,17 +104,37 @@ export function verifyDevStudentCookiePayload(
     return null;
   }
 
-  const email = rawPayload.slice(0, separatorIndex);
+  const body = rawPayload.slice(0, separatorIndex);
   const signature = rawPayload.slice(separatorIndex + 1);
-  const normalized = normalizeDevStudentEmail(email);
-  if (!normalized) return null;
+  const expectedSignature = computeSessionSignature(body, signingKey);
 
-  const expectedSignature = computeDevStudentCookieSignature(normalized, signingKey);
   if (!signaturesMatch(expectedSignature, signature)) {
     return null;
   }
 
-  return normalized;
+  if (body === DEV_STUDENT_SESSION_LOGGED_OUT_BODY) {
+    return { kind: "logged_out" };
+  }
+
+  if (!body.startsWith(DEV_STUDENT_SESSION_STUDENT_PREFIX)) {
+    return null;
+  }
+
+  const email = body.slice(DEV_STUDENT_SESSION_STUDENT_PREFIX.length);
+  const normalized = normalizeDevStudentEmail(email);
+  if (!normalized) return null;
+
+  return { kind: "student", email: normalized };
+}
+
+/** @deprecated Usar verifyDevStudentSessionPayload. */
+export function verifyDevStudentCookiePayload(
+  rawPayload: string,
+  signingKey: string
+): string | null {
+  const payload = verifyDevStudentSessionPayload(rawPayload, signingKey);
+  if (!payload || payload.kind !== "student") return null;
+  return payload.email;
 }
 
 function decodeCookieRawValue(rawValue: string): string | null {
@@ -104,27 +147,21 @@ function decodeCookieRawValue(rawValue: string): string | null {
   }
 }
 
-export function readDevStudentEmailFromCookieHeader(
-  header: string | undefined,
-  signingKey: string
-): string | null {
-  const cookies = parseCookieHeader(header);
-  const rawValue = cookies.get(DEV_STUDENT_COOKIE_NAME);
-  if (rawValue === undefined) return null;
+export type DevStudentSessionResolution =
+  | { kind: "student"; email: string }
+  | { kind: "logged_out" }
+  | { kind: "invalid_cookie" }
+  | { kind: "fallback" };
 
-  const payload = decodeCookieRawValue(rawValue);
-  if (!payload) return null;
-  return verifyDevStudentCookiePayload(payload, signingKey);
-}
-
+/** @deprecated Usar resolveDevStudentSession. */
 export type DevStudentEmailResolution =
   | { kind: "resolved"; email: string }
   | { kind: "invalid_cookie" }
   | { kind: "fallback" };
 
-export function resolveDevStudentEmail(
+export function resolveDevStudentSession(
   cookieHeader: string | undefined
-): DevStudentEmailResolution {
+): DevStudentSessionResolution {
   const cookies = parseCookieHeader(cookieHeader);
   if (!cookies.has(DEV_STUDENT_COOKIE_NAME)) {
     return { kind: "fallback" };
@@ -140,32 +177,62 @@ export function resolveDevStudentEmail(
     return { kind: "invalid_cookie" };
   }
 
-  const email = verifyDevStudentCookiePayload(payload, signingKey);
-  if (!email) {
+  const session = verifyDevStudentSessionPayload(payload, signingKey);
+  if (!session) {
     return { kind: "invalid_cookie" };
   }
 
-  return { kind: "resolved", email };
+  if (session.kind === "logged_out") {
+    return { kind: "logged_out" };
+  }
+
+  return { kind: "student", email: session.email };
 }
 
-export function buildDevStudentSessionCookie(email: string): string {
+/** @deprecated Usar resolveDevStudentSession. */
+export function resolveDevStudentEmail(
+  cookieHeader: string | undefined
+): DevStudentEmailResolution {
+  const resolution = resolveDevStudentSession(cookieHeader);
+  if (resolution.kind === "student") {
+    return { kind: "resolved", email: resolution.email };
+  }
+  if (resolution.kind === "logged_out") {
+    return { kind: "invalid_cookie" };
+  }
+  return resolution;
+}
+
+function buildSignedSessionCookie(payload: DevStudentSessionPayload): string {
   const signingKey = process.env.GMUSIC_DEV_ACTIVATION_KEY;
   if (!isDevActivationKeyConfigured(signingKey)) {
     throw new Error("GMUSIC_DEV_ACTIVATION_KEY no está configurada para emitir sesión.");
   }
 
-  const payload = signDevStudentCookiePayload(email, signingKey);
-  const encoded = encodeURIComponent(payload);
+  const signedPayload = signDevStudentSessionPayload(payload, signingKey);
+  const encoded = encodeURIComponent(signedPayload);
   return `${DEV_STUDENT_COOKIE_NAME}=${encoded}; HttpOnly; SameSite=Strict; Path=${DEV_STUDENT_COOKIE_PATH}; Max-Age=${DEV_STUDENT_COOKIE_MAX_AGE_SECONDS}`;
 }
 
-export function buildDevStudentSessionClearCookie(): string {
-  return `${DEV_STUDENT_COOKIE_NAME}=; HttpOnly; SameSite=Strict; Path=${DEV_STUDENT_COOKIE_PATH}; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+export function buildDevStudentSessionCookie(email: string): string {
+  return buildSignedSessionCookie({ kind: "student", email });
+}
+
+export function buildDevStudentLoggedOutSessionCookie(): string {
+  return buildSignedSessionCookie({ kind: "logged_out" });
 }
 
 export function buildDevStudentCookieHeaderValue(
   email: string,
   signingKey: string
 ): string {
-  return encodeURIComponent(signDevStudentCookiePayload(email, signingKey));
+  return encodeURIComponent(
+    signDevStudentSessionPayload({ kind: "student", email }, signingKey)
+  );
+}
+
+export function buildDevStudentLoggedOutCookieHeaderValue(signingKey: string): string {
+  return encodeURIComponent(
+    signDevStudentSessionPayload({ kind: "logged_out" }, signingKey)
+  );
 }

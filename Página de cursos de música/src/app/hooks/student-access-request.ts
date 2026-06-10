@@ -15,6 +15,7 @@ export function applyAccessOutcome(
 ): StudentAccessHookState | null {
   if (!manager.isCurrent(generation)) return null;
   if (outcome.type === "aborted") return null;
+  if (outcome.type === "unauthenticated") return { status: "denied", user: { id: "", name: "", email: "" }, reason: "NO_ACTIVE_SUBSCRIPTION" };
   if (outcome.type === "error") return { status: "error", message: outcome.message };
   if (outcome.type === "allowed") {
     return {

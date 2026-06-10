@@ -21,7 +21,9 @@ import { AuthModal } from "./components/music/AuthModal";
 import { isPublicFreeLessonPage } from "./utils/academia-track-matrix";
 import { SEMESTRAL_CHECKOUT_COURSE, isSemestralCheckoutCourse } from "./utils/public-subscription-flow";
 import { activateSemestralWithAccessVerification } from "./services/gmusic-api/activate-semestral";
+import { postDevLogout, shouldAcceptLogoutSubmission } from "./services/gmusic-api/dev-logout";
 import { GmusicApiError } from "./services/gmusic-api/client";
+import { usePublicStudentSession } from "./hooks/usePublicStudentSession";
 import { preloadCriticalImages } from "./utils/image-config";
 import {
   getInitialPageFromPath,
@@ -65,6 +67,9 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("register");
   const [pendingSemestralCheckout, setPendingSemestralCheckout] = useState(false);
+  const [logoutProcessing, setLogoutProcessing] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const publicSession = usePublicStudentSession();
 
   // Music player functions
   const onPlay = (track: Track) => { setCurrentTrack(track); setPlaying(true); };
@@ -126,7 +131,45 @@ export default function App() {
     });
 
     setUserState("premium");
+    const sessionOutcome = await publicSession.refresh();
+    if (sessionOutcome.type !== "authenticated") {
+      throw new GmusicApiError(
+        "La activación no actualizó la sesión pública.",
+        200,
+        "SESSION_REFRESH_FAILED"
+      );
+    }
     handlePageChange("mi-estudio");
+  };
+
+  const handlePublicLogout = async () => {
+    if (!shouldAcceptLogoutSubmission(logoutProcessing)) return;
+
+    setLogoutProcessing(true);
+    setLogoutError(null);
+
+    try {
+      await postDevLogout();
+      const sessionOutcome = await publicSession.refresh();
+      if (sessionOutcome.type !== "anonymous") {
+        throw new GmusicApiError(
+          "No se pudo confirmar el cierre de sesión.",
+          200,
+          "LOGOUT_VERIFICATION_FAILED"
+        );
+      }
+      setUserState("anonymous");
+      setUserData(null);
+      handlePageChange("home");
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "No pudimos cerrar sesión. Intenta de nuevo.";
+      setLogoutError(message);
+    } finally {
+      setLogoutProcessing(false);
+    }
   };
 
   const handleCourseClick = (course: Course) => {
@@ -165,6 +208,14 @@ export default function App() {
           setPage={handlePageChange}
           onSignIn={() => openAuthModal("login")}
           onRegister={() => openAuthModal("register")}
+          session={publicSession}
+          onGoToStudio={() => handlePageChange("mi-estudio")}
+          onLogout={handlePublicLogout}
+          onRetrySession={async () => {
+            await publicSession.refresh();
+          }}
+          logoutError={logoutError}
+          logoutProcessing={logoutProcessing}
         />
       )}
 

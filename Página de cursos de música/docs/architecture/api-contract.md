@@ -189,17 +189,27 @@ La respuesta incluye `Cache-Control: no-store` y establece una **cookie HttpOnly
 Tras activación exitosa, el servidor emite:
 
 ```
-Set-Cookie: gmusic_dev_student_email=<email>.<hmac-sha256-hex>;
+Set-Cookie: gmusic_dev_student_email=student:<email>.<hmac-sha256-hex>;
 HttpOnly; SameSite=Strict; Path=/api/v1; Max-Age=28800
 ```
 
-- El valor codifica `email` normalizado (minúsculas) + `.` + firma **HMAC-SHA256** calculada con `GMUSIC_DEV_ACTIVATION_KEY`.
+Estados firmados tipados:
+
+| Estado | Payload firmado | Comportamiento en `devStudentAuth` |
+|--------|-----------------|-------------------------------------|
+| `student` | `student:<email>.<hmac>` | Resuelve **solo** ese alumno; sin fallback |
+| `logged_out` | `logged_out.<hmac>` | `401 UNAUTHORIZED`; **sin** fallback |
+| (ausente) | — | Fallback por `GMUSIC_DEV_USER_EMAIL` |
+| inválida/manipulada | — | `401`; **sin** fallback |
+
+- La firma **HMAC-SHA256** se calcula sobre el cuerpo (`student:<email>` o `logged_out`) con `GMUSIC_DEV_ACTIVATION_KEY`.
 - `devStudentAuth` valida la firma con comparación segura (`timingSafeEqual`). Cookie manipulada, firma inválida, formato incorrecto o demasiado larga → `401` **sin** usar `GMUSIC_DEV_USER_EMAIL` como fallback.
-- Sin cookie válida, continúa el fallback por `GMUSIC_DEV_USER_EMAIL`.
+- Cookie `logged_out` válida → `401` **sin** fallback (cierre de sesión real).
+- Sin cookie → fallback por `GMUSIC_DEV_USER_EMAIL` (pruebas y herramientas directas del API).
 - **Eliminar esta mecánica antes de producción** y reemplazarla por autenticación real (JWT/sesión Supabase). Nunca exponer `GMUSIC_DEV_ACTIVATION_KEY` en respuestas, logs, variables `VITE_*` ni bundle frontend.
 - En HTTP local de desarrollo **no** se usa flag `Secure`.
 
-**Cierre de sesión local:** `POST /api/v1/dev/logout` (misma protección `devActivationGate`). Responde `204`, `Cache-Control: no-store`, elimina la cookie (`Max-Age=0`). No borra usuario, suscripción ni progreso.
+**Cierre de sesión local:** `POST /api/v1/dev/logout` (misma protección `devActivationGate`). Responde `204`, `Cache-Control: no-store`, emite cookie firmada `logged_out` (HttpOnly, SameSite=Strict, Path=/api/v1, Max-Age=28800). No borra usuario, suscripción ni progreso. Una nueva activación Semestral reemplaza `logged_out` por cookie `student`.
 
 **Request**
 
@@ -619,6 +629,7 @@ Reporte de actividad de un alumno. **Requiere** `GuardianLink` entre apoderado y
 
 | Fecha | Cambio |
 |-------|--------|
+| 2026-06-10 | Cookie firmada `logged_out` + sesión pública Navbar (R3.3D) |
 | 2026-06-10 | Sesión HttpOnly firmada (HMAC) + `POST /dev/logout` para desarrollo local |
 | 2026-06-10 | `POST /dev/activate-semestral` — activación simulada de suscripción (solo desarrollo) |
 | 2026-06-09 | `GET /me/access` — contrato de acceso a zona privada del alumno |
