@@ -1,6 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "motion/react";
-import { getPlanById } from "../data/subscription-plans";
+import {
+  parsePlanId,
+  getPlanTier,
+  getBillingPeriod,
+  getPlanPrice,
+  isValidPlanId,
+  formatCLP,
+} from "../data/subscription-plans";
 import type { PlanId } from "../data/subscription-plans";
 import { GOLD, TEXT_SEC, WHITE_WARM } from "../components/marketing/tokens";
 
@@ -12,34 +19,46 @@ const SELECTED_PLAN_KEY = "gmusic:selected_plan_v1";
 function readSelectedPlan(): PlanId {
   try {
     const raw = localStorage.getItem(SELECTED_PLAN_KEY);
-    if (!raw) return "semester";
+    if (!raw) return "plus-semester";
     const parsed: unknown = JSON.parse(raw);
     if (
       parsed !== null &&
       typeof parsed === "object" &&
       "planId" in parsed &&
-      (["monthly", "semester", "annual"] as unknown[]).includes(
-        (parsed as { planId: unknown }).planId
-      )
+      isValidPlanId((parsed as { planId: unknown }).planId)
     ) {
       return (parsed as { planId: PlanId }).planId;
     }
-    return "semester";
+    return "plus-semester";
   } catch {
-    return "semester";
+    return "plus-semester";
   }
 }
 
-function buildWhatsappMessage(planName: string, nombre: string, email: string, wsp: string): string {
-  let msg = `Hola, quiero inscribirme en Gmusic Academy.\nCompleté el primer camino gratuito.\nMe interesa el plan ${planName}.`;
+function buildWhatsappMessage(
+  tierName: string,
+  periodLabel: string,
+  nombre: string,
+  email: string,
+  wsp: string
+): string {
+  let msg = `Hola, quiero inscribirme en Gmusic Academy.\nCompleté el primer camino gratuito.\nMe interesa ${tierName} (${periodLabel.toLowerCase()}).`;
   if (nombre.trim()) msg += `\nMi nombre es: ${nombre.trim()}`;
   if (email.trim()) msg += `\nMi email: ${email.trim()}`;
   if (wsp.trim()) msg += `\nMi WhatsApp: ${wsp.trim()}`;
   return msg;
 }
 
-function buildWhatsappUrl(planName: string, nombre = "", email = "", wsp = ""): string {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(buildWhatsappMessage(planName, nombre, email, wsp))}`;
+function buildWhatsappUrl(
+  tierName: string,
+  periodLabel: string,
+  nombre = "",
+  email = "",
+  wsp = ""
+): string {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    buildWhatsappMessage(tierName, periodLabel, nombre, email, wsp)
+  )}`;
 }
 
 const FIELD_BASE: React.CSSProperties = {
@@ -73,7 +92,10 @@ interface InscripcionRegistroPageProps {
 
 export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProps) {
   const [planId] = useState<PlanId>(() => readSelectedPlan());
-  const plan = getPlanById(planId);
+  const { tier: tierId, period: periodId } = parsePlanId(planId);
+  const tier = getPlanTier(tierId);
+  const period = getBillingPeriod(periodId);
+  const price = getPlanPrice(tierId, periodId);
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -86,7 +108,7 @@ export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProp
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    window.open(buildWhatsappUrl(plan.name, nombre, email, whatsapp), "_blank", "noopener,noreferrer");
+    window.open(buildWhatsappUrl(tier.name, period.label, nombre, email, whatsapp), "_blank", "noopener,noreferrer");
     setFormSent(true);
   };
 
@@ -157,43 +179,62 @@ export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProp
           style={{
             padding: "16px 20px",
             borderRadius: 4,
-            border: plan.highlighted ? "1px solid rgba(206,130,255,0.2)" : "1px solid rgba(255,255,255,0.07)",
-            background: plan.highlighted ? "rgba(206,130,255,0.04)" : "rgba(255,255,255,0.02)",
+            border: tier.highlighted ? "1px solid rgba(206,130,255,0.2)" : "1px solid rgba(255,255,255,0.07)",
+            background: tier.highlighted ? "rgba(206,130,255,0.04)" : "rgba(255,255,255,0.02)",
             marginBottom: 24,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
           }}
         >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "Inter, sans-serif", color: WHITE_WARM }}>
-                Plan {plan.name}
-              </span>
-              {plan.savingsLabel && (
-                <span style={{
-                  fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-                  textTransform: "uppercase", color: "var(--edu-reward)",
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "Inter, sans-serif", color: WHITE_WARM }}>
+              {tier.name}
+            </span>
+            <span style={{ fontSize: 11, color: TEXT_SEC, fontFamily: "Inter, sans-serif" }}>
+              · {period.label}
+            </span>
+            {period.savingsLabel && (
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--edu-reward)",
                   fontFamily: "Inter, sans-serif",
-                }}>
-                  {plan.savingsLabel}
-                </span>
-              )}
-            </div>
-            <p style={{ margin: 0, fontSize: 12, color: TEXT_SEC, fontFamily: "Inter, sans-serif" }}>
-              {plan.description}
-            </p>
+                }}
+              >
+                {period.savingsLabel}
+              </span>
+            )}
           </div>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, fontFamily: "Inter, sans-serif", color: "rgba(255,150,0,0.8)" }}>
-              Cupos de apertura
-            </p>
-            <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "Inter, sans-serif" }}>
-              Precio por confirmar · {plan.intervalLabel}
-            </p>
+
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, fontFamily: "Inter, sans-serif", color: WHITE_WARM }}>
+              {formatCLP(price.pricePerMonth)}
+            </span>
+            <span style={{ fontSize: 11, color: TEXT_SEC, fontFamily: "Inter, sans-serif" }}> / mes</span>
+            {periodId !== "monthly" && (
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Inter, sans-serif" }}>
+                {formatCLP(price.totalPrice)} {period.intervalLabel}
+              </p>
+            )}
           </div>
+
+          <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+            {tier.features.slice(0, 3).map((f) => (
+              <li
+                key={f}
+                style={{
+                  fontSize: 11,
+                  color: TEXT_SEC,
+                  fontFamily: "Inter, sans-serif",
+                  lineHeight: 1.5,
+                  marginBottom: 2,
+                }}
+              >
+                ✓ {f}
+              </li>
+            ))}
+          </ul>
         </motion.div>
 
         {/* Primary WhatsApp CTA */}
@@ -204,7 +245,7 @@ export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProp
           style={{ marginBottom: 28 }}
         >
           <motion.a
-            href={buildWhatsappUrl(plan.name, nombre, email, whatsapp)}
+            href={buildWhatsappUrl(tier.name, period.label, nombre, email, whatsapp)}
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ background: "#1fad55", boxShadow: "0 8px 24px rgba(37,211,102,0.22)" }}

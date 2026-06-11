@@ -2,19 +2,32 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Lock, CheckCircle } from "lucide-react";
 import { useDemoProgress } from "../hooks/useDemoProgress";
-import { SUBSCRIPTION_PLANS, getPlanById } from "../data/subscription-plans";
-import type { PlanId } from "../data/subscription-plans";
+import {
+  PLAN_TIERS,
+  BILLING_PERIODS,
+  getPlanPrice,
+  getPlanTier,
+  getBillingPeriod,
+  formatCLP,
+} from "../data/subscription-plans";
+import type {
+  PlanTier,
+  BillingPeriod,
+  PlanTierDef,
+  BillingPeriodDef,
+  PlanPrice,
+} from "../data/subscription-plans";
 import { GOLD, TEXT_SEC, WHITE_WARM, BORDER } from "../components/marketing/tokens";
 
 // Gamification tokens — CSS vars from design-system/tokens.css
 const EDU_SUCCESS = "var(--edu-success)";
-const EDU_REWARD = "var(--edu-reward)";
 const EDU_ACHIEVEMENT = "var(--edu-achievement)";
 
 const SELECTED_PLAN_KEY = "gmusic:selected_plan_v1";
 
-function saveSelectedPlan(planId: PlanId) {
+function saveSelectedPlan(tier: PlanTier, period: BillingPeriod) {
   try {
+    const planId = `${tier}-${period}`;
     localStorage.setItem(SELECTED_PLAN_KEY, JSON.stringify({ planId }));
   } catch {
     // localStorage indisponible
@@ -24,13 +37,15 @@ function saveSelectedPlan(planId: PlanId) {
 // ─── Plan card ───────────────────────────────────────────────────────────────
 
 interface PlanCardProps {
-  plan: (typeof SUBSCRIPTION_PLANS)[number];
+  tier: PlanTierDef;
+  price: PlanPrice;
+  period: BillingPeriodDef;
   selected: boolean;
   onSelect: () => void;
 }
 
-function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
-  const isHighlighted = plan.highlighted;
+function PlanCard({ tier, price, period, selected, onSelect }: PlanCardProps) {
+  const isHighlighted = tier.highlighted;
   const borderColor = selected
     ? `rgba(201,168,76,0.55)`
     : isHighlighted
@@ -61,10 +76,10 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
         outlineOffset: 2,
       }}
       aria-pressed={selected}
-      aria-label={`Seleccionar plan ${plan.name}`}
+      aria-label={`Seleccionar ${tier.name}`}
     >
       {/* Highlighted badge */}
-      {isHighlighted && (
+      {tier.badge && (
         <span
           style={{
             position: "absolute",
@@ -83,7 +98,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
             whiteSpace: "nowrap",
           }}
         >
-          Recomendado
+          {tier.badge}
         </span>
       )}
 
@@ -114,7 +129,7 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
         )}
       </div>
 
-      {/* Plan name + savings */}
+      {/* Plan name */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
         <span
           style={{
@@ -125,51 +140,73 @@ function PlanCard({ plan, selected, onSelect }: PlanCardProps) {
             letterSpacing: "-0.01em",
           }}
         >
-          {plan.name}
+          {tier.name}
         </span>
-        {plan.savingsLabel && (
-          <span
-            style={{
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: EDU_REWARD,
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            {plan.savingsLabel}
-          </span>
-        )}
       </div>
 
       {/* Price display */}
-      <div style={{ marginBottom: 10 }}>
+      <div style={{ marginBottom: 8 }}>
+        <span
+          style={{
+            fontSize: 22,
+            fontWeight: 800,
+            fontFamily: "Inter, sans-serif",
+            color: WHITE_WARM,
+          }}
+        >
+          {formatCLP(price.pricePerMonth)}
+        </span>
         <span
           style={{
             fontSize: 11,
-            fontWeight: 500,
+            color: TEXT_SEC,
             fontFamily: "Inter, sans-serif",
-            color: "rgba(255,255,255,0.35)",
-            fontStyle: "italic",
           }}
         >
-          Cupos de apertura · {plan.intervalLabel}
+          {" "}
+          / mes
         </span>
+        {period.id !== "monthly" && (
+          <div
+            style={{
+              fontSize: 10,
+              color: "rgba(255,255,255,0.3)",
+              fontFamily: "Inter, sans-serif",
+              marginTop: 2,
+            }}
+          >
+            {formatCLP(price.totalPrice)} {period.intervalLabel}
+          </div>
+        )}
       </div>
 
-      {/* Description */}
-      <p
+      {/* Features */}
+      <ul
         style={{
-          margin: 0,
-          fontSize: 12,
-          lineHeight: 1.6,
-          fontFamily: "Inter, sans-serif",
-          color: TEXT_SEC,
+          margin: "8px 0 0",
+          padding: "0 0 0 14px",
+          listStyle: "none",
         }}
       >
-        {plan.description}
-      </p>
+        {tier.features.map((f) => (
+          <li
+            key={f}
+            style={{
+              fontSize: 11,
+              color: TEXT_SEC,
+              fontFamily: "Inter, sans-serif",
+              lineHeight: 1.6,
+              marginBottom: 2,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 6,
+            }}
+          >
+            <span style={{ color: "var(--edu-success)", flexShrink: 0, marginTop: 1 }}>✓</span>
+            {f}
+          </li>
+        ))}
+      </ul>
     </motion.button>
   );
 }
@@ -314,7 +351,8 @@ interface InscripcionGatePageProps {
 
 export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
   const { demoFinished, completedLessons } = useDemoProgress();
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>("semester");
+  const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("semester");
+  const [selectedTier, setSelectedTier] = useState<PlanTier>("plus");
 
   if (!demoFinished) {
     return (
@@ -325,10 +363,8 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
     );
   }
 
-  const plan = getPlanById(selectedPlan);
-
   const handleBegin = () => {
-    saveSelectedPlan(selectedPlan);
+    saveSelectedPlan(selectedTier, selectedPeriod);
     setPage("inscripcion-registro");
   };
 
@@ -480,20 +516,61 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
           transition={{ delay: 0.35, duration: 0.4 }}
           style={{ marginBottom: 32 }}
         >
-          {/* Pricing soon notice */}
-          <p
+          {/* Period toggle */}
+          <div
             style={{
-              margin: "0 0 20px",
-              fontSize: 12,
-              textAlign: "center",
-              color: "rgba(255,150,0,0.75)",
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 500,
+              display: "flex",
+              gap: 6,
+              justifyContent: "center",
+              marginBottom: 24,
+              padding: "4px",
+              background: "rgba(255,255,255,0.03)",
+              borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.06)",
             }}
           >
-            Cupos de apertura — precio por confirmar vía WhatsApp
-          </p>
+            {BILLING_PERIODS.map((bp) => {
+              const isActive = selectedPeriod === bp.id;
+              return (
+                <button
+                  key={bp.id}
+                  type="button"
+                  onClick={() => setSelectedPeriod(bp.id)}
+                  style={{
+                    flex: 1,
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: isActive ? "rgba(201,168,76,0.12)" : "transparent",
+                    color: isActive ? GOLD : "rgba(255,255,255,0.45)",
+                    fontSize: 11,
+                    fontWeight: isActive ? 700 : 500,
+                    fontFamily: "Inter, sans-serif",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <div>{bp.label}</div>
+                  {bp.savingsLabel && (
+                    <div
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: isActive ? "var(--edu-reward)" : "rgba(255,150,0,0.4)",
+                        letterSpacing: "0.05em",
+                        marginTop: 2,
+                      }}
+                    >
+                      {bp.savingsLabel}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
+          {/* Plan tier cards */}
           <div
             style={{
               display: "grid",
@@ -501,14 +578,20 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
               gap: 12,
             }}
           >
-            {SUBSCRIPTION_PLANS.map((p) => (
-              <PlanCard
-                key={p.id}
-                plan={p}
-                selected={selectedPlan === p.id}
-                onSelect={() => setSelectedPlan(p.id)}
-              />
-            ))}
+            {PLAN_TIERS.map((tier) => {
+              const price = getPlanPrice(tier.id, selectedPeriod);
+              const period = getBillingPeriod(selectedPeriod);
+              return (
+                <PlanCard
+                  key={tier.id}
+                  tier={tier}
+                  price={price}
+                  period={period}
+                  selected={selectedTier === tier.id}
+                  onSelect={() => setSelectedTier(tier.id)}
+                />
+              );
+            })}
           </div>
         </motion.div>
 
@@ -526,7 +609,7 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
         >
           <AnimatePresence mode="wait">
             <motion.button
-              key={selectedPlan}
+              key={`${selectedTier}-${selectedPeriod}`}
               type="button"
               initial={{ opacity: 0.7, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -554,7 +637,7 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
                 fontFamily: "Inter, sans-serif",
               }}
             >
-              Comenzar con {plan.name} →
+              Comenzar con {getPlanTier(selectedTier).name} →
             </motion.button>
           </AnimatePresence>
 

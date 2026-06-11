@@ -3,7 +3,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
-import { SUBSCRIPTION_PLANS, getPlanById } from "../data/subscription-plans";
+import {
+  PLAN_TIERS,
+  BILLING_PERIODS,
+  PRICE_TABLE,
+  parsePlanId,
+  isValidPlanId,
+  getPlanTier,
+} from "../data/subscription-plans";
+import type { PlanTier, BillingPeriod } from "../data/subscription-plans";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const gateSource = readFileSync(join(root, "./InscripcionGatePage.tsx"), "utf8");
@@ -11,47 +19,55 @@ const registroSource = readFileSync(join(root, "./InscripcionRegistroPage.tsx"),
 const appSource = readFileSync(join(root, "../App.tsx"), "utf8");
 
 describe("subscription-plans — configuración de planes", () => {
-  it("tiene exactamente 3 planes", () => {
-    assert.equal(SUBSCRIPTION_PLANS.length, 3);
+  it("tiene exactamente 3 tiers de plan", () => {
+    assert.equal(PLAN_TIERS.length, 3);
   });
 
-  it("todos los planes tienen price: null (precios por definir)", () => {
-    assert.equal(
-      SUBSCRIPTION_PLANS.every((p) => p.price === null),
-      true
-    );
+  it("tiene exactamente 3 períodos de facturación", () => {
+    assert.equal(BILLING_PERIODS.length, 3);
   });
 
-  it("plan semestral está destacado; mensual y anual no", () => {
-    const semester = SUBSCRIPTION_PLANS.find((p) => p.id === "semester");
-    const others = SUBSCRIPTION_PLANS.filter((p) => p.id !== "semester");
-    assert.equal(semester?.highlighted, true);
-    assert.equal(
-      others.every((p) => !p.highlighted),
-      true
-    );
+  it("plan Plus está destacado; Básico y Familiar no", () => {
+    const plus = PLAN_TIERS.find((t) => t.id === "plus");
+    const others = PLAN_TIERS.filter((t) => t.id !== "plus");
+    assert.equal(plus?.highlighted, true);
+    assert.equal(others.every((t) => !t.highlighted), true);
   });
 
-  it("todos los planes tienen flowPlanId no vacío preparado para Flow", () => {
+  it("cada tier tiene 3 flowPlanIds no vacíos (9 combinaciones totales)", () => {
+    const periods: BillingPeriod[] = ["monthly", "semester", "annual"];
     assert.equal(
-      SUBSCRIPTION_PLANS.every(
-        (p) => typeof p.flowPlanId === "string" && p.flowPlanId.length > 4
+      PLAN_TIERS.every((t) =>
+        periods.every((p) => typeof t.flowPlanIds[p] === "string" && t.flowPlanIds[p].length > 4)
       ),
       true
     );
   });
 
-  it("getPlanById lanza error para id desconocido", () => {
-    assert.throws(
-      () => getPlanById("unknown" as "monthly"),
-      /Unknown plan id/
+  it("PRICE_TABLE tiene precios positivos para todas las combinaciones", () => {
+    const tiers: PlanTier[] = ["basico", "plus", "familiar"];
+    const periods: BillingPeriod[] = ["monthly", "semester", "annual"];
+    assert.equal(
+      tiers.every((t) => periods.every((p) => PRICE_TABLE[t][p].totalPrice > 0)),
+      true
     );
   });
 
-  it("getPlanById devuelve el plan correcto para cada id", () => {
-    assert.equal(getPlanById("monthly").name, "Mensual");
-    assert.equal(getPlanById("semester").name, "Semestral");
-    assert.equal(getPlanById("annual").name, "Anual");
+  it("parsePlanId divide correctamente", () => {
+    assert.deepEqual(parsePlanId("plus-semester"), { tier: "plus", period: "semester" });
+    assert.deepEqual(parsePlanId("basico-monthly"), { tier: "basico", period: "monthly" });
+    assert.deepEqual(parsePlanId("familiar-annual"), { tier: "familiar", period: "annual" });
+  });
+
+  it("isValidPlanId valida las 9 combinaciones y rechaza inválidos", () => {
+    assert.equal(isValidPlanId("plus-monthly"), true);
+    assert.equal(isValidPlanId("familiar-annual"), true);
+    assert.equal(isValidPlanId("monthly"), false);
+    assert.equal(isValidPlanId("unknown"), false);
+  });
+
+  it("getPlanTier lanza error para tier desconocido", () => {
+    assert.throws(() => getPlanTier("unknown" as PlanTier), /Unknown plan tier/);
   });
 });
 
@@ -67,8 +83,8 @@ describe("InscripcionGatePage — puerta de inscripción", () => {
     assert.equal(gateSource.includes("Completa tu primer camino"), true);
   });
 
-  it("muestra los 3 planes usando SUBSCRIPTION_PLANS", () => {
-    assert.equal(gateSource.includes("SUBSCRIPTION_PLANS"), true);
+  it("muestra los 3 tiers usando PLAN_TIERS", () => {
+    assert.equal(gateSource.includes("PLAN_TIERS"), true);
     assert.equal(gateSource.includes("PlanCard"), true);
   });
 
@@ -89,10 +105,14 @@ describe("InscripcionRegistroPage — bridge WhatsApp", () => {
   it("lee el plan guardado en localStorage", () => {
     assert.equal(registroSource.includes("gmusic:selected_plan_v1"), true);
     assert.equal(registroSource.includes("readSelectedPlan"), true);
+    assert.equal(registroSource.includes("plus-semester"), true);
   });
 
-  it("usa getPlanById para mostrar el nombre del plan", () => {
-    assert.equal(registroSource.includes("getPlanById"), true);
+  it("usa helpers del modelo tier+periodo para mostrar el plan", () => {
+    assert.equal(registroSource.includes("parsePlanId"), true);
+    assert.equal(registroSource.includes("getPlanTier"), true);
+    assert.equal(registroSource.includes("getBillingPeriod"), true);
+    assert.equal(registroSource.includes("getPlanPrice"), true);
   });
 
   it("permite volver a inscripcion-gate para cambiar plan", () => {
@@ -113,8 +133,9 @@ describe("InscripcionRegistroPage — bridge WhatsApp", () => {
     assert.equal(registroSource.includes("email"), true);
   });
 
-  it("mensaje de WhatsApp menciona el nombre del plan seleccionado", () => {
-    assert.equal(registroSource.includes("plan.name"), true);
+  it("mensaje de WhatsApp menciona el nombre del tier y período seleccionados", () => {
+    assert.equal(registroSource.includes("tier.name"), true);
+    assert.equal(registroSource.includes("period.label"), true);
   });
 
   it("muestra texto de reserva de lugar", () => {
