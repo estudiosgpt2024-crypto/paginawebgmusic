@@ -1,7 +1,12 @@
 # Cursor Context — Gmusic Estudio
 
 Leer antes de cualquier tarea. Actualizar cuando cambie algo relevante en el repo.
-Fuente canónica extendida: `.cursorrules`, `docs/CURSOR-CONTEXT.md`, `.agents/MEMORY.md`.
+
+Fuente canónica extendida (verificadas en disco, 10 Jun 2026):
+
+- `.cursorrules` — existe
+- `docs/CURSOR-CONTEXT.md` — existe
+- `.agents/MEMORY.md` — memoria de continuidad Fable
 
 ---
 
@@ -27,7 +32,7 @@ npm run api:dev         # Express :3001
 npm run build           # build producción
 ```
 
-**Última ejecución auditada:** `npm run app:test` → **356 pass / 0 fail** (128 suites).
+**Última ejecución auditada:** `npm run app:test` → **356 pass / 0 fail** (128 suites), post-`8ca6228`.
 
 ---
 
@@ -39,7 +44,7 @@ npm run build           # build producción
 | `mi-camino-demo` | `PathDemoPage` | ❌ | 5 nodos demo |
 | `demo-clase-1` … `demo-clase-5` | `DemoLessonPage` | ❌ | Regex en App |
 | `inscripcion-gate` | `InscripcionGatePage` | ❌ | Requiere 5 clases completas |
-| `inscripcion-registro` | `InscripcionRegistroPage` | ❌ | Bridge WhatsApp (temporal) |
+| `inscripcion-registro` | `InscripcionRegistroPage` | ❌ | Bridge WhatsApp (`56953429676`, commit `8ca6228`) |
 | `mi-estudio` / `welcome` | `GmusicWelcome` | ❌ | `StudentZoneGuard` + `/alumno` |
 | `mi-camino` | `GmusicPath` | ❌ | `StudentZoneGuard` + `/mi-camino` |
 
@@ -141,11 +146,47 @@ Ver `.agents/DO_NOT_TOUCH.md`.
 
 ## Troubleshooting TS (falso positivo LSP)
 
-Errores `Cannot find name 'process'/'global'` en el panel de VS Code suelen ser **cache stale del TS server**, no errores reales (`npm run app:typecheck` pasa).
+**Estado actual (post-`8ca6228`):** `npm run app:typecheck` está **limpio**. Los archivos raíz `CURSOR-INSTRUCTIONS.md` y `TODO-fix-ts-errors.md` fueron **absorbidos aquí y eliminados** — no buscarlos en la raíz del repo.
 
-Fix: `Cmd+Shift+P` → **TypeScript: Restart TS Server**.
+### Síntoma habitual (panel de problemas VS Code / Cursor)
 
-Ver también `CURSOR-INSTRUCTIONS.md` en raíz (recomendado mover/absorber aquí).
+Errores que **no** reproducen en CLI:
+
+- `Cannot find name 'process'` (ts **2591**)
+- `Cannot find name 'global'` (ts **2304**)
+
+**Causa más probable:** cache stale del **TS server del IDE**, no código roto. Verificar con:
+
+```bash
+grep -rn "process\." src/    # no debe encontrar usages reales en frontend
+grep -rn "^global\." src/
+npm run app:typecheck         # fuente de verdad — debe pasar sin errores
+```
+
+### Fix (orden recomendado)
+
+1. `Cmd+Shift+P` → **TypeScript: Restart TS Server**
+2. Esperar barra de estado: "Restarting TS Server" → "Ready"
+3. Confirmar que el panel de problemas se vacía
+4. Validar en terminal: `npm run app:typecheck`
+
+### No modificar por este falso positivo
+
+- **`tsconfig.app.json`** — `"types": ["node"]` es intencional para el build; no quitarlo por estos avisos del LSP
+- **No** buscar/reemplazar `process` ni `global` en `src/` si `grep` y `app:typecheck` están limpios
+
+### Si aparecen errores TS reales en `src/` (frontend Vite)
+
+Solo aplicar si `npm run app:typecheck` **falla** (no solo el panel del IDE):
+
+| Patrón | Reemplazar por |
+|--------|----------------|
+| `process.env.VARIABLE` | `import.meta.env.VARIABLE` |
+| `process.env.VITE_*` | `import.meta.env.VITE_*` |
+| `global` (Node) en código browser | Eliminar o reimplementar con equivalente browser |
+| `globalThis` | Válido en browser — verificar uso concreto |
+
+Variables de entorno nuevas → documentar en `.env.example` (no hardcodear secretos en `VITE_*`).
 
 ---
 

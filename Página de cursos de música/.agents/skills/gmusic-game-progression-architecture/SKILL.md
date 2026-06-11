@@ -1,15 +1,17 @@
 ---
 name: gmusic-game-progression-architecture
 description: >-
-  Arquitectura de progresión y conversión de Gmusic: matriz Academia 3×3,
-  funnel Semestral lineal, estados de bloqueo WCAG AA y semántica de juego
-  premium sin infantilizar. Usar cuando la tarea toque niveles, XP, funnel
-  público, suscripción mock, Academia o cards bloqueadas.
+  Arquitectura de progresión y conversión de Gmusic: demo funnel 5 clases,
+  matrix Academia 3×3, funnel Semestral lineal, estados de bloqueo WCAG AA y
+  semántica de juego premium. Usar cuando la tarea toque niveles, XP, funnel
+  público, demo flow, suscripción, Academia o cards bloqueadas.
 ---
 
 # Gmusic Game Progression Architecture
 
-Usar este skill cuando la tarea toque **mecánicas de juego**, **progresión**, **funnel de conversión**, **matriz de niveles** o **estados bloqueados** — no para CSS/VFX (ver `gmusic-visual-vfx`) ni layout base (ver `gmusic-welcome` / `DESIGN.md`).
+Usar este skill cuando la tarea toque **mecánicas de juego**, **progresión**, **funnel de conversión**, **demo flow**, **matriz de niveles** o **estados bloqueados** — no para CSS/VFX (ver `gmusic-visual-vfx`) ni layout base (ver `gmusic-welcome` / `DESIGN.md`).
+
+Para el detalle del funnel público (rutas, localStorage, CTA, InscripcionGate), leer también `gmusic-funnel-conversion`.
 
 ## Fuentes locales obligatorias
 
@@ -18,8 +20,40 @@ Usar este skill cuando la tarea toque **mecánicas de juego**, **progresión**, 
 3. `src/app/utils/academia-track-matrix.ts`
 4. `src/app/utils/public-subscription-flow.ts`
 5. `src/app/App.tsx` (funnel y red de seguridad pública)
+6. `src/app/data/demo-lessons.ts` (configuración de las 5 clases del demo)
+7. `src/app/data/subscription-plans.ts` (3 planes con flowPlanId)
 
 Complemento visual/gamificado: skill `gmusic-edu-gamified-design`.
+
+---
+
+## Flujo de conversión canónico (actualizado Fase 3)
+
+El flujo principal de conversión de visitante anónimo a alumno suscrito es:
+
+```
+GmusicLanding (home)
+  └── AcademiaSection [CTA dinámico — useDemoUserState]
+        └── mi-camino-demo → PathDemoPage (5 nodos serpentinos)
+              └── demo-clase-1..5 → DemoLessonPage
+                    └── [clase 5 completa] → inscripcion-gate → InscripcionGatePage
+                          └── selector de planes → inscripcion-registro
+                                └── [Fase 4] auth + registro → mi-estudio
+                                      └── [Fase 5] pago Flow + email Resend
+```
+
+Estado del demo: localStorage `gmusic:demo_v1 = { completed: number[] }`.
+Plan elegido: localStorage `gmusic:selected_plan_v1 = { planId: "monthly"|"semester"|"annual" }`.
+
+**Ruta legacy paralela (suscripción directa sin demo):**
+```
+PlanesSection → handleSemestralPlanSelect → AuthModal → CheckoutPage → mi-estudio
+```
+
+**Clase pública legacy (aún activa, no es el camino principal):**
+- Ruta: `fundamento-free-lesson` → `FreeFundamentoLessonPage`
+- Red de seguridad: `isPublicFreeLessonPage()` cubre alias
+- Esta ruta NO es el embudo principal — el embudo principal es el demo de 5 clases
 
 ---
 
@@ -49,7 +83,7 @@ Fuente: `academia-track-matrix.ts`
 
 ---
 
-## Funnel de conversión lineal (Semestral)
+## Funnel de conversión lineal (Semestral — ruta directa legacy)
 
 Fuente: `public-subscription-flow.ts` + `App.tsx`
 
@@ -69,11 +103,6 @@ Plan Semestral (PlanesSection)
 - `handleCheckoutSuccess` lleva a `mi-estudio`, no a `course-detail`.
 - Mensual/Anual: no seleccionables en esta fase (placeholders visuales).
 - Navbar público: `onSignIn` / `onRegister` activos; sin acceso directo a Mi Estudio anónimo.
-
-**Clase gratuita (paralela, no sustituye Semestral):**
-
-- Ruta: `fundamento-free-lesson` → `FreeFundamentoLessonPage` (consola Video → Desafío → Éxito).
-- Red de seguridad: `isPublicFreeLessonPage()` cubre alias (`fundamento-preview`, etc.).
 
 ---
 
@@ -120,7 +149,9 @@ No implementar backend real, pagos reales ni Tonal.js salvo fase explícita.
 
 ## QA mínima
 
-1. `npm run app:test` — especialmente `fundamento-funnel.test.ts`, `dashboard-atmosphere.test.ts`.
-2. Matriz 3×3: 9 celdas, solo Fundamento Básico → clase gratuita.
-3. Semestral: registro → checkout → `/alumno`.
-4. Locked cards: contraste AA, sin opacity global en contenedor.
+1. `npm run app:test` — especialmente `fundamento-funnel.test.ts`, `path-demo-page.test.ts`, `inscripcion-gate.test.ts`, `dashboard-atmosphere.test.ts`.
+2. Demo funnel: 5 nodos serpentinos, progresión correcta, inscripcion-gate bloqueada si demo incompleto.
+3. Matriz 3×3: 9 celdas; `fundamento-free-lesson` sigue activa como ruta legacy pero no es el CTA principal.
+4. Semestral directo: registro → checkout → `/alumno`.
+5. Locked cards: contraste AA, sin opacity global en contenedor.
+6. Alumno autenticado: CTA de AcademiaSection → "Entrar a mi academia", nunca "Ver clase gratuita".

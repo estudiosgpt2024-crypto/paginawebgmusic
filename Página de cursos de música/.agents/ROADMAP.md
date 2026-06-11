@@ -101,3 +101,13 @@ PostHog — ~8 eventos de funnel. No bloqueante.
 - OAuth / Supabase Auth como proveedor principal
 - Rediseño completo de landing ya funcional
 - Eliminar rutas legacy (`fundamento-free-lesson`, `probar`) sin plan de migración explícito
+
+### Limpieza rutas legacy (post-Fase 4)
+
+No eliminar sin plan de migración explícito y autorización de Juan.
+
+| Ruta | Estado | Dependencia activa |
+|------|--------|--------------------|
+| fundamento-free-lesson | Activa — HeroSection/PlanesSection la referencian | Verificar si AcademiaSection ya la reemplaza completamente |
+| probar | Activa en producción sin DEV_LEGACY guard | Sin referencias de usuario conocidas |
+| fundamento-preview | Inerte — no montada en App.tsx | — |

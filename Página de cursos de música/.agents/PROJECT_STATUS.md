@@ -1,6 +1,6 @@
 # Project Status — Gmusic Estudio
 
-Última actualización: 10 Jun 2026 (auditoría Cursor, solo lectura de código)
+Última actualización: 10 Jun 2026 (post-`8ca6228` — Pre-Fase 4 commiteada)
 
 ## Fases
 
@@ -9,7 +9,7 @@
 | Fase 1 | Landing limpia + CTA dinámico en AcademiaSection | ✅ Completo | `5ad9517` | `fundamento-funnel.test.ts` |
 | Fase 2 | Demo 5 clases (PathDemoPage + DemoLessonPage) | ✅ Completo | `2e41d9f` | `path-demo-page.test.ts`, `fundamento-funnel.test.ts` |
 | Fase 3 | InscripcionGatePage gamificada + selector de planes | ✅ Completo | `2e41d9f` | `inscripcion-gate.test.ts` |
-| Pre-Fase 4 | Bridge WhatsApp + videos YouTube en demo | ⚠️ Implementado, sin commit | — | `inscripcion-gate.test.ts` (modificado sin commit) |
+| Pre-Fase 4 | Bridge WhatsApp + videos YouTube en demo | ✅ Completo | `8ca6228` | `inscripcion-gate.test.ts` |
 | R3 / zona alumno | Acceso, funnel Semestral dev, cofre Fase 6, R3.3E redirect | ✅ Completo (remoto) | `30e310b`…`6088dc5` | `public-session-flow.test.ts`, `map-dashboard.test.ts`, etc. |
 | Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada | — | — |
 | Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada | — | — |
@@ -24,7 +24,7 @@ Páginas montadas en `App.tsx` que **no** están detrás de `DEV_LEGACY`:
 | `PathDemoPage.tsx` | `mi-camino-demo` | ✅ Completo | 5 nodos desde `DEMO_LESSONS`; progreso vía `useDemoProgress` |
 | `DemoLessonPage.tsx` | `demo-clase-1` … `demo-clase-5` | ✅ Completo | Fases video → ejercicio → éxito; YouTube embed si `videoUrl` presente |
 | `InscripcionGatePage.tsx` | `inscripcion-gate` | ✅ Completo | `LockedGate` si demo incompleto; selector 3 planes |
-| `InscripcionRegistroPage.tsx` | `inscripcion-registro` | ⚠️ Parcial | Bridge WhatsApp; `WHATSAPP_NUMBER = "569XXXXXXXXX"` (L9) |
+| `InscripcionRegistroPage.tsx` | `inscripcion-registro` | ✅ Completo | Bridge WhatsApp; `WHATSAPP_NUMBER = "56953429676"` (L8, commit `8ca6228`) |
 | `GmusicWelcome.tsx` | `mi-estudio`, `welcome` | ✅ Completo | Tras `StudentZoneGuard`; API dashboard real/mock |
 | `GmusicPath.tsx` | `mi-camino` | ✅ Completo | Tras `StudentZoneGuard`; API path + lesson sessions |
 | `FreeFundamentoLessonPage.tsx` | `fundamento-free-lesson` | 🗂️ Legacy activo | Ruta paralela; Hero/Planes aún apuntan aquí |
@@ -64,34 +64,31 @@ Páginas montadas en `App.tsx` que **no** están detrás de `DEV_LEGACY`:
 
 ## Archivos sin commit (working tree)
 
-Según `git status` al momento de la auditoría:
+Pre-Fase 4 funcional ya commiteada en **`8ca6228`** (`demo-lessons`, `VideoPlayerLesson`, `DemoLessonPage`, `InscripcionGatePage`, `InscripcionRegistroPage`, `inscripcion-gate.test.ts`).
+
+**WHATSAPP_NUMBER resuelto:** `56953429676` (formato wa.me correcto).
+
+Según `git status` al momento de esta actualización:
 
 **Modificados (unstaged):**
 
 - `.agents/skills/gmusic-game-progression-architecture/SKILL.md`
-- `src/app/components/dashboard/VideoPlayerLesson.tsx`
-- `src/app/data/demo-lessons.ts`
-- `src/app/pages/DemoLessonPage.tsx`
-- `src/app/pages/InscripcionGatePage.tsx`
-- `src/app/pages/InscripcionRegistroPage.tsx`
-- `src/app/pages/inscripcion-gate.test.ts`
 
-**Sin rastrear:**
+**Sin rastrear (pendientes commit documental `.agents/`):**
 
 - `.agents/MEMORY.md`
 - `.agents/skills/gmusic-agent-workflow/SKILL.md`
 - `.agents/skills/gmusic-auth-email-verification/SKILL.md`
 - `.agents/skills/gmusic-funnel-conversion/SKILL.md`
-- `CURSOR-INSTRUCTIONS.md` (raíz)
-- `TODO-fix-ts-errors.md` (raíz)
 
-**Nota git:** `main` local estaba **2 commits ahead** de `origin/main` (`5ad9517`, `2e41d9f`) además de los cambios unstaged anteriores.
+**Absorbidos y eliminados de raíz (Paso 2):** `CURSOR-INSTRUCTIONS.md`, `TODO-fix-ts-errors.md` → contenido en `.agents/CURSOR_CONTEXT.md` § Troubleshooting TS.
+
+**Nota git:** `main` local estaba **4 commits ahead** de `origin/main` (`5ad9517`, `2e41d9f`, `177b402`, `8ca6228`) además de los cambios documentales pendientes anteriores.
 
 ## Pendientes inmediatos
 
-- [ ] WhatsApp real (`569XXXXXXXX`) — reemplazar placeholder en `InscripcionRegistroPage.tsx` L9 (`WHATSAPP_NUMBER`)
 - [ ] Precios reales CLP (Mensual / Semestral / Anual) — `subscription-plans.ts`: todos los `price: null`
 - [ ] Decisión Clase 4: ejercicio curricular (`ex4-calidad-acorde` vs. `Ex2NotasAm` / contenido del video)
 - [ ] Decisión Skills curriculares: ¿repo git o Notion/Drive?
-- [ ] Autorización commit Pre-Fase 4 (bridge WhatsApp + YouTube + Skills nuevos)
-- [ ] Push de commits funnel (`5ad9517`, `2e41d9f`) si aún no están en remoto
+- [ ] Probar accesible en producción sin DEV_LEGACY guard (bajo impacto — sin links públicos conocidos). Resolver en limpieza post-Fase 4.
+- [ ] Commit documental final `.agents/` + push conjunto (autorizado por Fable, pendiente de completar actualizaciones)
