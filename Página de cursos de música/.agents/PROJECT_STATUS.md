@@ -1,6 +1,6 @@
 # Project Status — Gmusic Estudio
 
-Última actualización: 12 Jun 2026 (post-Fase B ExPulsoAire — implementada, pendiente validación)
+Última actualización: 12 Jun 2026 (Fase 3.5a — registro inscripción estructurado, commiteado local)
 
 ## Fases
 
@@ -12,8 +12,11 @@
 | Pre-Fase 4 | Bridge WhatsApp + videos YouTube en demo | ✅ Completo | `8ca6228` | `inscripcion-gate.test.ts` |
 | Fase Precios | Modelo 3 tiers × 3 períodos + CLP en gate/registro | ✅ Completo | `cf3343c` | `inscripcion-gate.test.ts` (358 tests totales app) |
 | R3 / zona alumno | Acceso, funnel Semestral dev, cofre Fase 6, R3.3E redirect | ✅ Completo (remoto) | `30e310b`…`6088dc5` | `public-session-flow.test.ts`, `map-dashboard.test.ts`, etc. |
-| **Fase A** | **Reordenamiento pedagógico demo (5-class Fundamento arc)** | **✅ Completo** | **`90883a1`** | **`path-demo-page.test.ts` (358/358)** |
-| **Fase B** | **ExPulsoAire — ejercicio TAP manual para Clases 4 y 5** | **⚠️ Implementada — pendiente validación y commit** | **sin commit** | **app:typecheck ✅ · app:test 358/358 ✅** |
+| Fase A | Reordenamiento pedagógico demo (arc Conoce→Afina→Cuerdas→Pulso→Canción) | ✅ Completo | `90883a1` | `path-demo-page.test.ts` (358/358) |
+| Fase B código | ExPulsoAire — ejercicio TAP manual Clases 4 y 5 · validado en browser | ✅ Completo | `846c8f5` | 358/358 |
+| Fase Visual A | DemoPathCards — tarjetas verticales reemplazando mapa serpentino | ✅ Completo | `263d5f6` | 358/358 |
+| Fase Visual B | Carrusel Yousician + DemoAcademyNav (4 tabs sticky) | ✅ Completo · validado en browser | `263d5f6` | 358/358 |
+| Fase 3.5a | Registro: dos CTAs (inscripción + dudas), form boleta/factura, eliminar "reservar" copy | ✅ Completo | `35e139b` | `inscripcion-gate.test.ts` (358/358) |
 | Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada — condicionada a conversión WhatsApp | — | — |
 | Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada — condicionada a Fase 4 | — | — |
 
@@ -84,21 +87,15 @@ No bloqueante para el commit de Fase B — es una decisión de contenido, no un 
 
 ---
 
-## Archivos sin commit (working tree actual)
+## Archivos sin commit
 
-**Fase B — implementada por Cursor, sin commit:**
+Working tree limpio. `main` local y remoto alineados en `263d5f6`.
 
-| Archivo | Acción |
-|---------|--------|
-| `src/app/components/dashboard/exercises/ExPulsoAire.tsx` | Creado (untracked) |
-| `src/app/data/demo-lessons.ts` | Modificado — `PulsoBeat` interface + `"ex-pulso-aire"` kind + Clases 4 y 5 actualizadas |
-| `src/app/pages/DemoLessonPage.tsx` | Modificado — import + render case para `ExPulsoAire` |
-
-**Pendiente de resolución:**
+**Pendiente de resolución (no bloquea demo):**
 
 | Archivo | Problema |
 |---------|---------|
-| `src/app/data/demo-lessons.ts` (Clase 3) | `videoUrl` duplicado con Clase 2 — `TODO` insertado en el código; sin URL correcta definida aún |
+| `src/app/data/demo-lessons.ts` (Clase 3) | `videoUrl` duplicado con Clase 2 — `TODO` en código; requiere URL real de video de cuerdas al aire |
 
 ---
 
@@ -115,13 +112,30 @@ No bloqueante para el commit de Fase B — es una decisión de contenido, no un 
 
 ---
 
-## Próximo paso operativo (Fase B validation loop)
+## Estado del demo — listo para revisión PO
 
-1. [ ] Confirmar commit local de Fase B (hash pendiente — Juan autoriza mensaje)
-2. [ ] Juan revisa en browser: Clases 4 y 5 con ExPulsoAire funcionando
-3. [ ] Fable decide: aceptar v1 o aplicar patch pedagógico (secuencias de cuerdas alternadas + silencios)
-4. [ ] Actualizar `.agents/` con resultado
-5. [ ] Push solo con autorización explícita de Juan
+El funnel completo está publicado y validado en browser:
+
+```
+Landing → Ver clase gratuita → mi-camino-demo (carrusel Yousician, 4 tabs nav)
+  → demo-clase-1..5 (video → ejercicio → éxito)
+    → inscripcion-gate (planes 3×3 CLP)
+      → inscripcion-registro (WhatsApp bridge)
+```
+
+**Caveat explícito:** Clase 3 usa video placeholder (mismo embed que Clase 2). Requiere URL real antes de escalar el funnel a tráfico real.
+
+## Próximo paso operativo
+
+**Condición de desbloqueo para Fase 4:** primera conversión real confirmada vía WhatsApp (`56953429676`).
+
+**Fase 3.5b pendiente** (ver D-025, P-004): auditar `handleSemestralPlanSelect` en App.tsx antes de autorizar redirección landing → gate. No implementar sin esa auditoría.
+
+Hasta que haya conversión, opciones disponibles:
+- Fase 3.5b: unificar CTA landing "Semestral" → mi-camino-demo o gate (requiere auditoría previa)
+- Fase Visual C: quitar doble nav (GmusicInternalHeader oculto en mi-camino-demo) + eliminar PathPageIntro redundante
+- Fix cosmético Clase 3 video (requiere URL real de Juan)
+- PostHog analytics — 8 eventos de funnel (aprobado en principio)
 
 ---
 
