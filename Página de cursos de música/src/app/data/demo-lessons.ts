@@ -1,8 +1,18 @@
+export interface PulsoBeat {
+  stringNumber: number;
+  label: string;
+  stringName: string;
+}
+
 export type DemoExerciseKind =
   | { kind: "mcq"; question: string; options: { id: string; text: string }[]; correctId: string }
   | { kind: "ex1-cuerdas" }
-  | { kind: "ex4-calidad-acorde" }
-  | { kind: "ex5-secuencia" };
+  | {
+      kind: "ex-pulso-aire";
+      headline: string;
+      description: string;
+      sequence: readonly PulsoBeat[];
+    };
 
 export interface DemoLesson {
   lessonNumber: number;
@@ -28,6 +38,24 @@ export interface DemoLesson {
   exercise: DemoExerciseKind;
   completionMessage: string;
 }
+
+const PULSO_CUERDA_6: PulsoBeat = {
+  stringNumber: 6,
+  label: "6",
+  stringName: "Mi grave",
+};
+
+const PULSO_CUERDA_5: PulsoBeat = {
+  stringNumber: 5,
+  label: "5",
+  stringName: "La",
+};
+
+const PULSO_CUERDA_4: PulsoBeat = {
+  stringNumber: 4,
+  label: "4",
+  stringName: "Re",
+};
 
 export const DEMO_LESSONS: readonly DemoLesson[] = [
   {
@@ -86,6 +114,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     videoTitle: "Las 6 cuerdas al aire",
     videoSubtitle: "Nombres, orden y sonido de cada cuerda",
     videoDuration: "8 min",
+    // TODO: Mismo embed que Clase 2 — reemplazar por video propio de cuerdas al aire antes de producción.
     videoUrl: "https://www.youtube.com/embed/s-XnaDpYXw4",
     videoSource: "youtube-example",
     isPlaceholderVideo: true,
@@ -96,7 +125,7 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     lessonNumber: 4,
     title: "Pulso con cuerdas al aire",
     subtitle: "Seguir una guía rítmica simple",
-    objective: "Identifica qué cuerda tocar cuando la guía indica un número de cuerda.",
+    objective: "Marca el pulso tocando la cuerda 6 al aire, a tu ritmo.",
     videoTitle: "Pulso y guía de cuerdas",
     videoSubtitle: "Ritmo básico tocando cuerdas al aire",
     videoDuration: "6 min",
@@ -104,23 +133,19 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     videoSource: "youtube-example",
     isPlaceholderVideo: true,
     exercise: {
-      kind: "mcq",
-      question: "Si la guía indica cuerda 6, ¿qué cuerda debes tocar?",
-      options: [
-        { id: "e6", text: "Mi grave (6)" },
-        { id: "e1", text: "Mi agudo (1)" },
-        { id: "string3", text: "Sol (3)" },
-        { id: "string4", text: "Re (4)" },
-      ],
-      correctId: "e6",
+      kind: "ex-pulso-aire",
+      headline: "Pulso en cuerda 6",
+      description:
+        "Toca la cuerda 6 al aire en cada TAP. Ve a tu ritmo — no hay metrónomo.",
+      sequence: Array.from({ length: 8 }, () => PULSO_CUERDA_6),
     },
-    completionMessage: "Ya puedes seguir una guía simple de cuerdas al aire.",
+    completionMessage: "Ya puedes marcar pulso con la cuerda 6 al aire.",
   },
   {
     lessonNumber: 5,
     title: "Tu primera canción con cuerdas al aire",
     subtitle: "Mini secuencia con cuerdas 6, 5 y 4",
-    objective: "Lee una secuencia sencilla de cuerdas al aire como primer reto musical.",
+    objective: "Sigue la mini secuencia 6–6–6 / 5–5–5 / 4–4–5–6 con TAP manual.",
     videoTitle: "Tu primera mini canción",
     videoSubtitle: "Secuencia guiada solo con cuerdas al aire",
     videoDuration: "10 min",
@@ -128,16 +153,22 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     videoSource: "youtube-example",
     isPlaceholderVideo: true,
     exercise: {
-      kind: "mcq",
-      question:
-        "¿Qué cuerdas usa esta mini canción: 6 6 — 6 / 5 5 — 5 / 4 4 5 6?",
-      options: [
-        { id: "s654", text: "Cuerdas 6, 5 y 4" },
-        { id: "s123", text: "Cuerdas 1, 2 y 3" },
-        { id: "s456", text: "Cuerdas 4, 5 y 6" },
-        { id: "s345", text: "Cuerdas 3, 4 y 5" },
+      kind: "ex-pulso-aire",
+      headline: "Mini canción · cuerdas 6, 5 y 4",
+      description:
+        "Un TAP por nota. Sigue la secuencia: 6 6 6 — 5 5 5 — 4 4 5 6.",
+      sequence: [
+        PULSO_CUERDA_6,
+        PULSO_CUERDA_6,
+        PULSO_CUERDA_6,
+        PULSO_CUERDA_5,
+        PULSO_CUERDA_5,
+        PULSO_CUERDA_5,
+        PULSO_CUERDA_4,
+        PULSO_CUERDA_4,
+        PULSO_CUERDA_5,
+        PULSO_CUERDA_6,
       ],
-      correctId: "s654",
     },
     completionMessage: "Completaste tu primer camino con cuerdas al aire.",
   },

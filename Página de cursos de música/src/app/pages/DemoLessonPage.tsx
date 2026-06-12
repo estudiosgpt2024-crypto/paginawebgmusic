@@ -4,8 +4,7 @@ import { X } from "lucide-react";
 import { VideoPlayerLesson } from "../components/dashboard/VideoPlayerLesson";
 import { MultipleChoiceExercise } from "../components/gmusic/lesson/MultipleChoiceExercise";
 import { Ex1Cuerdas } from "../components/dashboard/exercises/Ex1Cuerdas";
-import { Ex4CalidadAcorde } from "../components/dashboard/exercises/Ex4CalidadAcorde";
-import { Ex5Secuencia } from "../components/dashboard/exercises/Ex5Secuencia";
+import { ExPulsoAire } from "../components/dashboard/exercises/ExPulsoAire";
 import { useDemoProgress } from "../hooks/useDemoProgress";
 import { DEMO_LESSONS } from "../data/demo-lessons";
 import { playFreeFundamentoSuccessFeedback } from "../utils/free-fundamento-lesson";
@@ -358,11 +357,13 @@ export function DemoLessonPage({ lessonId, setPage }: DemoLessonPageProps) {
                 {lesson.exercise.kind === "ex1-cuerdas" && (
                   <Ex1Cuerdas onComplete={handleStandaloneComplete} />
                 )}
-                {lesson.exercise.kind === "ex4-calidad-acorde" && (
-                  <Ex4CalidadAcorde onComplete={handleStandaloneComplete} />
-                )}
-                {lesson.exercise.kind === "ex5-secuencia" && (
-                  <Ex5Secuencia onComplete={handleStandaloneComplete} />
+                {lesson.exercise.kind === "ex-pulso-aire" && (
+                  <ExPulsoAire
+                    headline={lesson.exercise.headline}
+                    description={lesson.exercise.description}
+                    sequence={lesson.exercise.sequence}
+                    onComplete={handleStandaloneComplete}
+                  />
                 )}
               </motion.div>
             )}
