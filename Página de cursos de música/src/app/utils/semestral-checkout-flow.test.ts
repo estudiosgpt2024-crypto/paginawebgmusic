@@ -137,6 +137,15 @@ describe("R3.3C — secreto fuera del frontend", () => {
 });
 
 describe("Registro y checkout Semestral", () => {
+  it("CTA Semestral landing navega a inscripcion-gate sin abrir AuthModal (Fase 3.5b)", () => {
+    const fnMatch = appSource.match(/const handleSemestralPlanSelect = \(\) => \{([\s\S]*?)\};/);
+    assert.ok(fnMatch, "handleSemestralPlanSelect debe existir en App.tsx");
+    const body = fnMatch[1];
+    assert.ok(body.includes('setCurrentPage("inscripcion-gate")'), "debe navegar a inscripcion-gate");
+    assert.equal(body.includes("openAuthModal"), false);
+    assert.equal(body.includes("setPendingSemestralCheckout(true)"), false);
+  });
+
   it("funnel Semestral fuerza registro y no ofrece Login", () => {
     assert.equal(appSource.includes("registrationOnly={pendingSemestralCheckout}"), true);
     assert.equal(authModalSource.includes("registrationOnly"), true);

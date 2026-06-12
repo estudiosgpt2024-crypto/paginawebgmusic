@@ -17,6 +17,7 @@
 | Fase Visual A | DemoPathCards — tarjetas verticales reemplazando mapa serpentino | ✅ Completo | `263d5f6` | 358/358 |
 | Fase Visual B | Carrusel Yousician + DemoAcademyNav (4 tabs sticky) | ✅ Completo · validado en browser | `263d5f6` | 358/358 |
 | Fase 3.5a | Registro: dos CTAs (inscripción + dudas), form boleta/factura, eliminar "reservar" copy | ✅ Completo | `35e139b` | `inscripcion-gate.test.ts` (358/358) |
+| Fase 3.5b | CTA "Semestral" landing → `inscripcion-gate` directo (Opción B, D-025); cerrar leak checkout legacy | ✅ Completo — pendiente commit | — | `semestral-checkout-flow.test.ts` (359/359) |
 | Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada — condicionada a conversión WhatsApp | — | — |
 | Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada — condicionada a Fase 4 | — | — |
 
@@ -89,7 +90,14 @@ No bloqueante para el commit de Fase B — es una decisión de contenido, no un 
 
 ## Archivos sin commit
 
-Working tree limpio. `main` local y remoto alineados en `263d5f6`.
+Working tree con cambios sin commit (Fase 3.5b):
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/app/App.tsx` | `handleSemestralPlanSelect` → `setCurrentPage("inscripcion-gate")` |
+| `src/app/utils/semestral-checkout-flow.test.ts` | Test nuevo: CTA Semestral navega a gate sin AuthModal |
+| `.agents/DECISIONS.md` | D-025 actualizado a Opción B; P-004 cerrado |
+| `.agents/PROJECT_STATUS.md` | Fase 3.5b registrada |
 
 **Pendiente de resolución (no bloquea demo):**
 
@@ -129,10 +137,9 @@ Landing → Ver clase gratuita → mi-camino-demo (carrusel Yousician, 4 tabs na
 
 **Condición de desbloqueo para Fase 4:** primera conversión real confirmada vía WhatsApp (`56953429676`).
 
-**Fase 3.5b pendiente** (ver D-025, P-004): auditar `handleSemestralPlanSelect` en App.tsx antes de autorizar redirección landing → gate. No implementar sin esa auditoría.
+**Fase 3.5b completa** (D-025, Opción B): `handleSemestralPlanSelect` → `setCurrentPage("inscripcion-gate")`; checkout legacy ya no es alcanzable desde el CTA Semestral del landing. Pendiente commit.
 
 Hasta que haya conversión, opciones disponibles:
-- Fase 3.5b: unificar CTA landing "Semestral" → mi-camino-demo o gate (requiere auditoría previa)
 - Fase Visual C: quitar doble nav (GmusicInternalHeader oculto en mi-camino-demo) + eliminar PathPageIntro redundante
 - Fix cosmético Clase 3 video (requiere URL real de Juan)
 - PostHog analytics — 8 eventos de funnel (aprobado en principio)

@@ -77,7 +77,7 @@ Registro oficial de decisiones de producto, pedagogía y arquitectura.
 | D-022 | No hacer push a main sin autorización explícita de Juan | — | Idem. Push afecta producción / remoto compartido. |
 | D-023 | `.agents/` es la fuente oficial de verdad — Cursor debe leerla antes de cada sesión | Jun 2026 | Protocolo para mantener coherencia entre sesiones y entre herramientas (Fable, Cursor, ChatGPT). |
 | D-024 | Post-demo = solicitud de inscripción estructurada + WhatsApp; "reservar lugar" prohibido en copy hasta que exista backend de cupos | Jun 2026 | No hay sistema de reservas. El copy "Reservar mi lugar" y "Tu lugar está reservado" crea expectativa falsa. El flujo es: form (nombre/email/WhatsApp/doc) → mensaje WhatsApp prefilled → equipo confirma acceso manualmente. Dos CTAs diferenciados: inscripción intencional vs. despejar dudas. |
-| D-025 | Landing "Semestral" CTA → ruta unificada: mi-camino-demo (si no completó demo) o inscripcion-gate (si completó) — checkout legacy congelado hasta Fase 5 | Jun 2026 | Un solo camino post-intención de pago evita fragmentación de funnel. El modal email y el checkout con tarjeta quedan congelados hasta que exista Flow (Fase 5). Requiere auditoría de handleSemestralPlanSelect antes de implementar (Fase 3.5b). |
+| D-025 | Landing "Semestral" CTA → siempre `inscripcion-gate` (Opción B) — checkout legacy congelado hasta Fase 5 | Jun 2026 | Quien hace clic en "Semestral" ya mostró intención de compra; mandarlos al demo es un desvío. `InscripcionGatePage` mantiene el `LockedGate` si no completó el demo — no hay bypass. Implementado en Fase 3.5b (`handleSemestralPlanSelect` → `setCurrentPage("inscripcion-gate")`). |
 
 ---
 
@@ -87,4 +87,4 @@ Registro oficial de decisiones de producto, pedagogía y arquitectura.
 |----|-----------------|--------------|
 | P-002 | ¿Cuál es el video correcto para Clase 3 (cuerdas al aire)? | Juan |
 | P-003 | ¿PostHog analytics como próxima mini-fase después de Fase B validada? | Juan |
-| P-004 | Fase 3.5b: ¿Autorizar redirección handleSemestralPlanSelect post-auditoría? | Fable + Juan |
+| ~~P-004~~ | ~~Fase 3.5b: ¿Autorizar redirección handleSemestralPlanSelect post-auditoría?~~ | ✅ Cerrado — implementado Jun 2026 (D-025 Opción B) |

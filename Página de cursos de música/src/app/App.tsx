@@ -97,9 +97,7 @@ export default function App() {
   };
 
   const handleSemestralPlanSelect = () => {
-    setPendingSemestralCheckout(true);
-    setSelectedCourse(SEMESTRAL_CHECKOUT_COURSE);
-    openAuthModal("register");
+    setCurrentPage("inscripcion-gate");
   };
 
   // Auth handlers
