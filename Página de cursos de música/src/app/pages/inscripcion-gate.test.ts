@@ -138,8 +138,8 @@ describe("InscripcionRegistroPage — bridge WhatsApp", () => {
     assert.equal(registroSource.includes("period.label"), true);
   });
 
-  it("muestra texto de reserva de lugar", () => {
-    assert.equal(registroSource.includes("reservado"), true);
+  it("muestra texto de solicitud de inscripción sin promesa de reserva", () => {
+    assert.equal(registroSource.includes("Aún no pagas aquí"), true);
   });
 });
 
