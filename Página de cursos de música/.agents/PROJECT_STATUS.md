@@ -1,6 +1,6 @@
 # Project Status — Gmusic Estudio
 
-Última actualización: 10 Jun 2026 (post-`cf3343c` — precios 3×3 en remoto)
+Última actualización: 12 Jun 2026 (post-Fase B ExPulsoAire — implementada, pendiente validación)
 
 ## Fases
 
@@ -12,8 +12,12 @@
 | Pre-Fase 4 | Bridge WhatsApp + videos YouTube en demo | ✅ Completo | `8ca6228` | `inscripcion-gate.test.ts` |
 | Fase Precios | Modelo 3 tiers × 3 períodos + CLP en gate/registro | ✅ Completo | `cf3343c` | `inscripcion-gate.test.ts` (358 tests totales app) |
 | R3 / zona alumno | Acceso, funnel Semestral dev, cofre Fase 6, R3.3E redirect | ✅ Completo (remoto) | `30e310b`…`6088dc5` | `public-session-flow.test.ts`, `map-dashboard.test.ts`, etc. |
-| Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada | — | — |
-| Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada | — | — |
+| **Fase A** | **Reordenamiento pedagógico demo (5-class Fundamento arc)** | **✅ Completo** | **`90883a1`** | **`path-demo-page.test.ts` (358/358)** |
+| **Fase B** | **ExPulsoAire — ejercicio TAP manual para Clases 4 y 5** | **⚠️ Implementada — pendiente validación y commit** | **sin commit** | **app:typecheck ✅ · app:test 358/358 ✅** |
+| Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada — condicionada a conversión WhatsApp | — | — |
+| Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada — condicionada a Fase 4 | — | — |
+
+---
 
 ## Inventario de páginas activas
 
@@ -34,7 +38,7 @@ Páginas montadas en `App.tsx` que **no** están detrás de `DEV_LEGACY`:
 | `CourseDetailPage.tsx` | `course-detail` | 🗂️ Legacy activo | Catálogo legacy |
 | `AlbumCoursesPages.tsx` | `album`, `courses` | 🗂️ Legacy activo | Catálogo legacy |
 | `InstrumentCoursesPage.tsx` | `instrument-selector`, `instrument-courses` | 🗂️ Legacy activo | Selector instrumento legacy |
-| `CommunityPage.tsx` | `community` | 🔴 Placeholder | Montada; alcance producto no verificado en esta auditoría |
+| `CommunityPage.tsx` | `community` | 🔴 Placeholder | Montada; alcance producto no verificado |
 
 **Solo en `import.meta.env.DEV` (`DEV_LEGACY`):**
 
@@ -50,24 +54,57 @@ Páginas montadas en `App.tsx` que **no** están detrás de `DEV_LEGACY`:
 |---------|-------|
 | `FundamentoPreviewPage.tsx` | Conservada; tests confirman que no se monta en App |
 
-## Inventario de ejercicios del demo
+---
 
-| Componente | Demo (`DemoLessonPage`) | Zona alumno (`ExerciseEngine` / `LessonPage`) | Clase demo |
-|------------|-------------------------|-----------------------------------------------|------------|
-| `MultipleChoiceExercise` | ✅ Clases 1 y 3 (MCQ en `demo-lessons.ts`) | ❌ | demo-clase-1, demo-clase-3 |
-| `Ex1Cuerdas.tsx` | ✅ Clase 2 (`ex1-cuerdas`) | ✅ `ExerciseEngine` paso 0 | demo-clase-2 |
-| `Ex2NotasAm.tsx` | ❌ | ✅ `ExerciseEngine` paso 1 | — |
-| `Ex3NotasEm.tsx` | ❌ | ✅ `ExerciseEngine` paso 2 | — |
-| `Ex4CalidadAcorde.tsx` | ✅ Clase 4 (`ex4-calidad-acorde`) | ✅ `ExerciseEngine` paso 3 | demo-clase-4 |
-| `Ex5Secuencia.tsx` | ✅ Clase 5 (`ex5-secuencia`) | ✅ `ExerciseEngine` paso 4 | demo-clase-5 |
+## Inventario de ejercicios del demo (estado post-Fase B)
 
-**Gap curricular documentado:** Clase 4 (video: notas y sostenidos) usa `ex4-calidad-acorde` (calidad mayor/menor). `Ex2NotasAm` no está cableado al demo.
+Arc pedagógico activo: **Conoce → Afina → Cuerdas → Pulso → Canción**
 
-## Archivos sin commit (working tree)
+| Clase | Título | Ejercicio | Componente | Estado |
+|-------|--------|-----------|------------|--------|
+| 1 | Conoce tu guitarra | MCQ — ¿dónde van las clavijas? (correctId: `headstock`) | `MultipleChoiceExercise` | ✅ |
+| 2 | Afina tu guitarra | MCQ — ¿qué nota es la cuerda 6? (correctId: `e_mi`) | `MultipleChoiceExercise` | ✅ |
+| 3 | Cuerdas al aire | Nombrar las 6 cuerdas | `Ex1Cuerdas` | ✅ |
+| 4 | Pulso con cuerdas al aire | TAP manual — 8 beats (ver nota pedagógica) | `ExPulsoAire` | ⚠️ impl. pendiente commit |
+| 5 | Tu primera canción | TAP manual — 10 beats (ver nota pedagógica) | `ExPulsoAire` | ⚠️ impl. pendiente commit |
 
-Según `git status` post-push `cf3343c`: **working tree limpio** en `src/`. Pendiente solo sincronización documental `.agents/` (Paso B).
+**Nota pedagógica — diferencia Fable spec vs. implementación Cursor (Fase B):**
 
-**Modelo de precios activo** (`subscription-plans.ts`, commit `cf3343c`):
+| | Fable especificó | Cursor implementó |
+|-|-----------------|-------------------|
+| Clase 4 | 8 beats alternando cuerdas 6/5/4 (`6 6 / 5 5 / 4 4 / 6 6`) | 8 beats en cuerda 6 al aire solamente |
+| Clase 5 | 15 beats con 3 silencios automáticos (`6 6 — 6 / 5 5 — 5 / 4 4 5 6 / 6 — 6`) | 10 beats sin silencios (`6 6 6 / 5 5 5 / 4 4 5 6`) |
+
+Pendiente: validación visual de Juan + decisión de Fable (aceptar v1 o patch pedagógico).
+No bloqueante para el commit de Fase B — es una decisión de contenido, no un bug técnico.
+
+**Componentes de ejercicio en zona alumno (ExerciseEngine / LessonPage — DEV_LEGACY):**
+
+`Ex2NotasAm`, `Ex3NotasEm`, `Ex4CalidadAcorde`, `Ex5Secuencia` — solo en zona alumno, nunca en demo.
+
+---
+
+## Archivos sin commit (working tree actual)
+
+**Fase B — implementada por Cursor, sin commit:**
+
+| Archivo | Acción |
+|---------|--------|
+| `src/app/components/dashboard/exercises/ExPulsoAire.tsx` | Creado (untracked) |
+| `src/app/data/demo-lessons.ts` | Modificado — `PulsoBeat` interface + `"ex-pulso-aire"` kind + Clases 4 y 5 actualizadas |
+| `src/app/pages/DemoLessonPage.tsx` | Modificado — import + render case para `ExPulsoAire` |
+
+**Pendiente de resolución:**
+
+| Archivo | Problema |
+|---------|---------|
+| `src/app/data/demo-lessons.ts` (Clase 3) | `videoUrl` duplicado con Clase 2 — `TODO` insertado en el código; sin URL correcta definida aún |
+
+---
+
+## Modelo de precios activo
+
+(`subscription-plans.ts`, commit `cf3343c`):
 
 - Tiers: `basico`, `plus` (recomendado), `familiar` (3 perfiles)
 - Períodos: `monthly`, `semester` (default UI), `annual`
@@ -76,12 +113,23 @@ Según `git status` post-push `cf3343c`: **working tree limpio** en `src/`. Pend
 
 **WHATSAPP_NUMBER:** `56953429676` (formato wa.me correcto, commit `8ca6228`).
 
-**Nota git:** `main` sincronizado con `origin/main` en `cf3343c`.
+---
 
-## Pendientes inmediatos
+## Próximo paso operativo (Fase B validation loop)
 
-- [ ] Decisión Clase 4: ejercicio curricular (`ex4-calidad-acorde` vs. `Ex2NotasAm` / contenido del video)
-- [ ] Decisión Skills curriculares: ¿repo git o Notion/Drive?
-- [ ] Probar accesible en producción sin DEV_LEGACY guard (bajo impacto — sin links públicos conocidos). Resolver en limpieza post-Fase 4.
-- [ ] Fase 4 Auth real — pausada hasta autorización explícita de Juan
-- [ ] Integración Flow real (Fase 5) — `flowPlanIds` definidos en código; webhook pendiente
+1. [ ] Confirmar commit local de Fase B (hash pendiente — Juan autoriza mensaje)
+2. [ ] Juan revisa en browser: Clases 4 y 5 con ExPulsoAire funcionando
+3. [ ] Fable decide: aceptar v1 o aplicar patch pedagógico (secuencias de cuerdas alternadas + silencios)
+4. [ ] Actualizar `.agents/` con resultado
+5. [ ] Push solo con autorización explícita de Juan
+
+---
+
+## Pendientes documentados (no bloqueantes hoy)
+
+- [ ] Clase 3 video: reemplazar embed duplicado (mismo que Clase 2) por video de cuerdas al aire
+- [ ] Patch pedagógico Fase B: cuerdas alternadas en Clase 4, silencios automáticos en Clase 5 (post-validación)
+- [ ] PostHog analytics — ~8 eventos de funnel — aprobado en principio, sin prioridad activa
+- [ ] Limpieza rutas legacy — post-Fase 4, con plan de migración explícito
+- [ ] Fase 4 Auth real — NO iniciar hasta primera conversión WhatsApp confirmada
+- [ ] Fase 5 Flow + Resend — NO iniciar hasta Fase 4 completa

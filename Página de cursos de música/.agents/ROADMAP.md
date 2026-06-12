@@ -52,15 +52,43 @@ Estrategia actual: **web embudo primero**.
 - Acceso `GET /me/access`, guard, funnel Semestral dev, sesión pública, cofre Fase 6, redirect R3.3E
 - Commits referencia: `356f175` … `30e310b`, `6088dc5`
 
+### Fase A — Reordenamiento pedagógico demo
+
+- Arc 5 clases: Conoce → Afina → Cuerdas → Pulso → Canción
+- `demo-lessons.ts` reordenado; títulos, subtítulos, objetivos y ejercicios alineados al arc
+- Commit: `90883a1`
+
+### Fase B — ExPulsoAire (TAP manual)
+
+- **Estado:** implementada por Cursor — `app:typecheck ✅` · `app:test 358/358 ✅` · **pendiente validación visual y commit**
+- `ExPulsoAire.tsx` — nuevo componente TAP; sigue estética de `Ex5Secuencia` (GOLD, Playfair, motion/react)
+- `demo-lessons.ts` — `PulsoBeat` interface; Clases 4 y 5 usan `kind: "ex-pulso-aire"` con secuencias TAP
+- `DemoLessonPage.tsx` — import + render case para `ExPulsoAire`
+- Sin micrófono · sin Web Audio API · sin Pitchy · sin enforcement de tempo
+- Pendiente: validación visual Juan + decisión Fable sobre secuencias (ver `PROJECT_STATUS.md`)
+
 ---
 
-## Próxima fase
+## Próximo paso operativo inmediato
+
+**Fase B validation loop** (antes de cualquier otra iniciativa):
+
+1. Commit local Fase B — Juan autoriza mensaje
+2. Juan revisa browser: Clases 4 y 5 con ExPulsoAire
+3. Fable decide: aceptar v1 o patch pedagógico (cuerdas alternadas + silencios)
+4. Actualizar `.agents/` con resultado
+5. Push con autorización Juan
+
+---
+
+## Próxima fase de infraestructura
 
 ### Fase 4 — Auth real
 
 **Estado:** pausada. Diseño en `.agents/skills/gmusic-auth-email-verification/SKILL.md`.
 
-**Prerequisito acordado:** WhatsApp real configurado + al menos 1 conversión vía bridge.
+**Prerequisito acordado:** al menos 1 conversión real confirmada vía WhatsApp.
+**NO iniciar Fase 4 antes de esa conversión — independientemente del calendario.**
 
 **Scope exacto (8 pasos):**
 
