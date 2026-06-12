@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../components/gmusic/GmusicInternalHeader";
 import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
+import { DemoAcademyNav } from "../components/gmusic/DemoAcademyNav";
+import { DemoPathCards } from "../components/gmusic/DemoPathCards";
 import { PathPageIntro } from "../components/gmusic/path/PathPageIntro";
-import { SerpentinePathMap } from "../components/gmusic/path/SerpentinePathMap";
-import { ActiveNodePanel } from "../components/gmusic/path/ActiveNodePanel";
 import { Button } from "../components/ui/button";
 import { DEMO_LESSONS } from "../data/demo-lessons";
 import { useDemoProgress } from "../hooks/useDemoProgress";
@@ -13,6 +13,8 @@ import { GM_BG, GM_BORDER, GM_GOLD, GM_SURFACE, GM_TEXT, GM_TEXT_SEC } from "../
 import { navigateToHomeSection } from "../utils/public-home-navigation";
 
 export const DEMO_PATH_NODE_ID = "demo-node-1";
+
+const WHITE_WARM = "#F5F0E8";
 
 const DEMO_BADGE = {
   instrument: "Guitarra",
@@ -57,12 +59,6 @@ export function buildDemoModules(completedLessons: number[]): PathModuleData[] {
   ];
 }
 
-function getLessonNumberFromNodeId(nodeId: string | null): number | null {
-  if (!nodeId) return null;
-  const match = /^demo-node-(\d)$/.exec(nodeId);
-  return match && match[1] ? parseInt(match[1], 10) : null;
-}
-
 interface LockedDemoNodePanelProps {
   compact?: boolean;
   title: string;
@@ -101,55 +97,6 @@ function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePane
         style={{ background: GM_GOLD, color: "#0A0A0A" }}
       >
         Ver planes
-      </Button>
-    </div>
-  );
-}
-
-interface CompletedDemoNodePanelProps {
-  compact?: boolean;
-  lessonNumber: number;
-  title: string;
-  onGoToNext: () => void;
-}
-
-function CompletedDemoNodePanel({
-  compact,
-  lessonNumber,
-  title,
-  onGoToNext,
-}: CompletedDemoNodePanelProps) {
-  return (
-    <div
-      className={`rounded-lg border p-5 md:p-6 ${compact ? "" : "lg:sticky lg:top-6"}`}
-      style={{
-        background: GM_SURFACE,
-        borderColor: GM_BORDER,
-        borderLeftWidth: 3,
-        borderLeftColor: "rgba(88, 204, 2, 0.35)",
-      }}
-    >
-      <p
-        className="text-[10px] font-medium tracking-[0.2em] uppercase mb-3"
-        style={{ color: "rgba(88, 204, 2, 0.65)" }}
-      >
-        Completada · Clase {lessonNumber} de 5
-      </p>
-      <h2
-        className={`font-medium mb-2 leading-snug ${compact ? "text-lg" : "text-xl"}`}
-        style={{ color: GM_TEXT, fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {title}
-      </h2>
-      <p className="text-sm mb-6 leading-relaxed" style={{ color: GM_TEXT_SEC }}>
-        ¡Clase superada! Continúa con la siguiente para avanzar en tu camino.
-      </p>
-      <Button
-        onClick={onGoToNext}
-        className="w-full font-medium min-h-[44px] tracking-wide"
-        style={{ background: GM_GOLD, color: "#0A0A0A" }}
-      >
-        Continuar al mapa
       </Button>
     </div>
   );
@@ -202,36 +149,23 @@ interface PathDemoPageProps {
   setPage: (page: string) => void;
 }
 
-type ModalKind = "leveling" | "locked" | null;
+type ModalKind = "locked" | null;
 
 export function PathDemoPage({ setPage }: PathDemoPageProps) {
-  const { completedLessons, demoFinished, nextLessonNumber } = useDemoProgress();
+  const { completedLessons, demoFinished } = useDemoProgress();
 
-  const activeNodeId = demoFinished ? null : `demo-node-${nextLessonNumber}`;
   const [modal, setModal] = useState<ModalKind>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => activeNodeId);
+  const [lockedTitle, setLockedTitle] = useState<string | null>(null);
 
   const demoModules = useMemo(
     () => buildDemoModules(completedLessons),
     [completedLessons]
   );
   const progress = useMemo(() => countPathProgress(demoModules), [demoModules]);
-
-  const selectedNode = useMemo((): PathNodeData | null => {
-    if (!selectedNodeId) return null;
-    for (const mod of demoModules) {
-      const node = mod.nodes.find((n) => n.id === selectedNodeId);
-      if (node) return node;
-    }
-    return null;
-  }, [demoModules, selectedNodeId]);
+  const allNodes = useMemo(() => demoModules.flatMap((mod) => mod.nodes), [demoModules]);
 
   const openNavPlaceholder = useCallback((key: string) => {
     if (isLockedNav(key)) setModal("locked");
-  }, []);
-
-  const handleNodeSelect = useCallback((node: PathNodeData) => {
-    setSelectedNodeId(node.id);
   }, []);
 
   const handleViewPlans = useCallback(() => {
@@ -240,11 +174,6 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
 
   const modalProps = () => {
     switch (modal) {
-      case "leveling":
-        return {
-          title: "Próximamente — evaluación de módulo",
-          subtitle: "Esta prueba estará disponible cuando activemos la validación interactiva.",
-        };
       case "locked":
         return {
           title: LOCKED_NAV_MODAL.title,
@@ -258,68 +187,6 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
 
   const mp = modalProps();
 
-  const renderSidePanel = (compact?: boolean) => {
-    if (demoFinished) {
-      return (
-        <DemoFinishedPanel
-          compact={compact}
-          onInscribirse={() => setPage("inscripcion-gate")}
-        />
-      );
-    }
-
-    if (!selectedNode) {
-      const firstLesson = DEMO_LESSONS[0];
-      return (
-        <ActiveNodePanel
-          compact={compact}
-          eyebrow="Clase gratuita · 1 de 5"
-          title={firstLesson?.title ?? ""}
-          typeLabel={`Lección · ${firstLesson?.videoDuration ?? ""}`}
-          description={firstLesson?.objective ?? ""}
-          onStartLesson={() => setPage("demo-clase-1")}
-          startLessonDisabled={false}
-        />
-      );
-    }
-
-    const lessonNumber = getLessonNumberFromNodeId(selectedNode.id);
-    const lesson = lessonNumber ? DEMO_LESSONS[lessonNumber - 1] : null;
-
-    if (selectedNode.status === "completed" && lessonNumber) {
-      return (
-        <CompletedDemoNodePanel
-          compact={compact}
-          lessonNumber={lessonNumber}
-          title={selectedNode.title}
-          onGoToNext={() => setSelectedNodeId(activeNodeId)}
-        />
-      );
-    }
-
-    if (selectedNode.status === "active" && lessonNumber && lesson) {
-      return (
-        <ActiveNodePanel
-          compact={compact}
-          eyebrow={`Clase gratuita · ${lessonNumber} de 5`}
-          title={lesson.title}
-          typeLabel={`Lección · ${lesson.videoDuration}`}
-          description={lesson.objective}
-          onStartLesson={() => setPage(`demo-clase-${lessonNumber}`)}
-          startLessonDisabled={false}
-        />
-      );
-    }
-
-    return (
-      <LockedDemoNodePanel
-        compact={compact}
-        title={selectedNode.title}
-        onViewPlans={handleViewPlans}
-      />
-    );
-  };
-
   return (
     <div className="min-h-screen" style={{ background: GM_BG, color: GM_TEXT }}>
       <GmusicInternalHeader
@@ -330,6 +197,15 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
         onPlaceholder={openNavPlaceholder}
       />
 
+      <DemoAcademyNav
+        activeTab="mi-camino"
+        completedCount={completedLessons.length}
+        onTabChange={(tab) => {
+          if (tab === "inicio") setPage("home");
+          if (tab === "mi-estudio") setPage("inscripcion-gate");
+        }}
+      />
+
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 lg:py-12">
         <PathPageIntro
           badge={DEMO_BADGE}
@@ -338,22 +214,58 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
           isLoading={false}
         />
 
-        <div className="lg:hidden mb-6">{renderSidePanel(true)}</div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-          <div className="lg:col-span-7">
-            <SerpentinePathMap
-              modules={demoModules}
-              activeNodeId={activeNodeId ?? ""}
-              selectedNodeId={selectedNodeId ?? ""}
-              onLevelingChallenge={() => setModal("leveling")}
-              onNodeSelect={handleNodeSelect}
-              allowLockedSelection
-            />
+        {demoFinished ? (
+          <div className="max-w-[600px] mx-auto">
+            <DemoFinishedPanel onInscribirse={() => setPage("inscripcion-gate")} />
           </div>
+        ) : (
+          <>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "32px 20px 8px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontFamily: "Inter,sans-serif",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.3)",
+                  marginBottom: 8,
+                }}
+              >
+                Tu camino musical · Fundamento
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Playfair Display',serif",
+                  fontSize: 28,
+                  color: WHITE_WARM,
+                  fontWeight: 400,
+                }}
+              >
+                Clase {Math.min(completedLessons.length + 1, 5)} de 5
+              </div>
+            </div>
 
-          <div className="hidden lg:block lg:col-span-5">{renderSidePanel()}</div>
-        </div>
+            <DemoPathCards
+              nodes={allNodes}
+              allowLockedSelection
+              onStartLesson={(n) => setPage(`demo-clase-${n}`)}
+              onLockedClick={(title) => setLockedTitle(title)}
+            />
+            {lockedTitle && (
+              <div className="max-w-[600px] mx-auto mt-6">
+                <LockedDemoNodePanel
+                  title={lockedTitle}
+                  onViewPlans={handleViewPlans}
+                />
+              </div>
+            )}
+          </>
+        )}
       </main>
 
       <GmusicPlaceholderModal
