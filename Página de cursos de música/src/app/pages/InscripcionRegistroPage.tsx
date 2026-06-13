@@ -10,6 +10,7 @@ import {
 } from "../data/subscription-plans";
 import type { PlanId } from "../data/subscription-plans";
 import { GOLD, TEXT_SEC, WHITE_WARM } from "../components/marketing/tokens";
+import { analytics } from "../utils/analytics";
 
 // Formato wa.me: código país + número, sin "+" ni espacios (ej. "56912345678")
 const WHATSAPP_NUMBER = "56953429676";
@@ -144,8 +145,13 @@ export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProp
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
+  useEffect(() => {
+    analytics.registroViewed(planId);
+  }, [planId]);
+
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    analytics.whatsappCtaClicked("inscripcion", planId);
     window.open(
       buildWhatsappUrl(
         tier.name,
@@ -486,6 +492,7 @@ export function InscripcionRegistroPage({ setPage }: InscripcionRegistroPageProp
             href={buildDudasUrl(tier.name, period.label)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => analytics.whatsappCtaClicked("dudas", planId)}
             whileHover={{ color: WHITE_WARM }}
             style={{
               display: "inline-flex",

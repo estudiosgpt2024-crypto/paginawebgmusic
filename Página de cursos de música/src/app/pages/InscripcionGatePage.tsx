@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Lock, CheckCircle } from "lucide-react";
 import { useDemoProgress } from "../hooks/useDemoProgress";
@@ -18,6 +18,7 @@ import type {
   PlanPrice,
 } from "../data/subscription-plans";
 import { GOLD, TEXT_SEC, WHITE_WARM, BORDER } from "../components/marketing/tokens";
+import { analytics } from "../utils/analytics";
 
 // Gamification tokens — CSS vars from design-system/tokens.css
 const EDU_SUCCESS = "var(--edu-success)";
@@ -354,6 +355,10 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<BillingPeriod>("semester");
   const [selectedTier, setSelectedTier] = useState<PlanTier>("plus");
 
+  useEffect(() => {
+    analytics.gateViewed(!demoFinished);
+  }, [demoFinished]);
+
   if (!demoFinished) {
     return (
       <LockedGate
@@ -364,6 +369,9 @@ export function InscripcionGatePage({ setPage }: InscripcionGatePageProps) {
   }
 
   const handleBegin = () => {
+    const price = getPlanPrice(selectedTier, selectedPeriod);
+    const planId = `${selectedTier}-${selectedPeriod}`;
+    analytics.planSelected(selectedTier, selectedPeriod, price.totalPrice, planId);
     saveSelectedPlan(selectedTier, selectedPeriod);
     setPage("inscripcion-registro");
   };

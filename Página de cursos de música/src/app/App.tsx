@@ -28,6 +28,7 @@ import { activateSemestralWithAccessVerification } from "./services/gmusic-api/a
 import { postDevLogout, shouldAcceptLogoutSubmission } from "./services/gmusic-api/dev-logout";
 import { GmusicApiError } from "./services/gmusic-api/client";
 import { usePublicStudentSession } from "./hooks/usePublicStudentSession";
+import { analytics } from "./utils/analytics";
 import { preloadCriticalImages } from "./utils/image-config";
 import {
   getInitialPageFromPath,
@@ -97,6 +98,7 @@ export default function App() {
   };
 
   const handleSemestralPlanSelect = () => {
+    analytics.semestralCtaClicked();
     setCurrentPage("inscripcion-gate");
   };
 

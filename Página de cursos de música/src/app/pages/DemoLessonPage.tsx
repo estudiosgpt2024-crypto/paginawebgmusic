@@ -8,6 +8,7 @@ import { ExPulsoAire } from "../components/dashboard/exercises/ExPulsoAire";
 import { useDemoProgress } from "../hooks/useDemoProgress";
 import { DEMO_LESSONS } from "../data/demo-lessons";
 import { playFreeFundamentoSuccessFeedback } from "../utils/free-fundamento-lesson";
+import { analytics } from "../utils/analytics";
 import type { ParsedExerciseView } from "../components/gmusic/lesson/lesson-runner-types";
 import { GOLD, TEXT_SEC, WHITE_WARM } from "../components/marketing/tokens";
 
@@ -165,6 +166,7 @@ export function DemoLessonPage({ lessonId, setPage }: DemoLessonPageProps) {
 
   const handleStandaloneComplete = () => {
     markComplete(lessonId);
+    analytics.demoLessonCompleted(lessonId, lesson.title);
     setPhase("success");
   };
 
@@ -175,12 +177,14 @@ export function DemoLessonPage({ lessonId, setPage }: DemoLessonPageProps) {
     }
     if (phase === "exercise" && isMcq && mcqResolved) {
       markComplete(lessonId);
+      analytics.demoLessonCompleted(lessonId, lesson.title);
       setPhase("success");
     }
   };
 
   const handleSuccessContinue = () => {
     if (lessonId >= 5) {
+      analytics.demoCompleted();
       setPage("inscripcion-gate");
     } else {
       setPage("mi-camino-demo");

@@ -7,6 +7,7 @@ import {
   type AcademiaTierId,
   type AcademiaTrackCombination,
 } from "../../utils/academia-track-matrix";
+import { analytics } from "../../utils/analytics";
 
 const GOLD = "#C9A84C";
 const GOLD_BORDER = "rgba(201,168,76,0.3)";
@@ -26,6 +27,7 @@ export function InteractiveLevelSelector({
 
   const handleStart = (track: AcademiaTrackCombination) => {
     if (!isFreeClassTrack(track)) return;
+    analytics.demoCtaClicked();
     setLevel(track.focusId);
     setPage("mi-camino-demo");
   };
