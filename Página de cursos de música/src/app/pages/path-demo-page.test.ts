@@ -70,4 +70,18 @@ describe("PathDemoPage — camino demo público", () => {
     assert.equal(demoPageSource.includes("demo-clase-"), true);
     assert.equal(demoPageSource.includes("LockedDemoNodePanel"), true);
   });
+
+  it("PathDemoPage usa solo DemoAcademyNav (Visual C — sin GmusicInternalHeader)", () => {
+    assert.equal(demoPageSource.includes("GmusicInternalHeader"), false);
+    assert.equal(demoPageSource.includes("DemoAcademyNav"), true);
+  });
+
+  it("demo completado muestra celebración centrada y carrusel (Visual C)", () => {
+    assert.equal(demoPageSource.includes("DemoFinishedCelebration"), true);
+    assert.equal(demoPageSource.includes("Tu recorrido completado"), true);
+    const finishedBranch = demoPageSource.match(/demoFinished \?\s*\(\s*<>[\s\S]*?\)\s*:\s*\(/);
+    assert.ok(finishedBranch, "debe existir rama demoFinished");
+    assert.equal(finishedBranch[0].includes("PathPageIntro"), false);
+    assert.equal(finishedBranch[0].includes("DemoPathCards"), true);
+  });
 });

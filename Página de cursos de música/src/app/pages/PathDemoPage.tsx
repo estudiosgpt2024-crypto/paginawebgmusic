@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { GmusicInternalHeader, isLockedNav, LOCKED_NAV_MODAL } from "../components/gmusic/GmusicInternalHeader";
-import { GmusicPlaceholderModal } from "../components/gmusic/GmusicPlaceholderModal";
+import { motion } from "motion/react";
+import { CheckCircle } from "lucide-react";
 import { DemoAcademyNav } from "../components/gmusic/DemoAcademyNav";
 import { DemoPathCards } from "../components/gmusic/DemoPathCards";
 import { PathPageIntro } from "../components/gmusic/path/PathPageIntro";
@@ -15,6 +15,7 @@ import { navigateToHomeSection } from "../utils/public-home-navigation";
 export const DEMO_PATH_NODE_ID = "demo-node-1";
 
 const WHITE_WARM = "#F5F0E8";
+const EDU_SUCCESS = "var(--edu-success)";
 
 const DEMO_BADGE = {
   instrument: "Guitarra",
@@ -60,15 +61,14 @@ export function buildDemoModules(completedLessons: number[]): PathModuleData[] {
 }
 
 interface LockedDemoNodePanelProps {
-  compact?: boolean;
   title: string;
   onViewPlans: () => void;
 }
 
-function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePanelProps) {
+function LockedDemoNodePanel({ title, onViewPlans }: LockedDemoNodePanelProps) {
   return (
     <div
-      className={`rounded-lg border p-5 md:p-6 ${compact ? "" : "lg:sticky lg:top-6"}`}
+      className="rounded-lg border p-5 md:p-6"
       style={{
         background: GM_SURFACE,
         borderColor: GM_BORDER,
@@ -83,7 +83,7 @@ function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePane
         Clase bloqueada
       </p>
       <h2
-        className={`font-medium mb-2 leading-snug ${compact ? "text-lg" : "text-xl"}`}
+        className="text-xl font-medium mb-2 leading-snug"
         style={{ color: GM_TEXT, fontFamily: "'Playfair Display', Georgia, serif" }}
       >
         {title}
@@ -102,46 +102,90 @@ function LockedDemoNodePanel({ compact, title, onViewPlans }: LockedDemoNodePane
   );
 }
 
-interface DemoFinishedPanelProps {
-  compact?: boolean;
+interface DemoFinishedCelebrationProps {
   onInscribirse: () => void;
 }
 
-function DemoFinishedPanel({ compact, onInscribirse }: DemoFinishedPanelProps) {
+function DemoFinishedCelebration({ onInscribirse }: DemoFinishedCelebrationProps) {
   return (
-    <div
-      className={`rounded-lg border p-5 md:p-6 ${compact ? "" : "lg:sticky lg:top-6"}`}
-      style={{
-        background: GM_SURFACE,
-        borderColor: GM_BORDER,
-        borderLeftWidth: 3,
-        borderLeftColor: "rgba(201, 168, 76, 0.5)",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 36px", padding: "0 12px" }}
     >
+      <div style={{ position: "relative", display: "inline-block", marginBottom: 20 }}>
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            border: `2px solid ${EDU_SUCCESS}`,
+            background: "rgba(88,204,2,0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto",
+          }}
+        >
+          <CheckCircle size={28} color={EDU_SUCCESS} strokeWidth={2} />
+        </div>
+      </div>
+
       <p
-        className="text-[10px] font-medium tracking-[0.2em] uppercase mb-3"
-        style={{ color: "rgba(201, 168, 76, 0.7)" }}
+        style={{
+          margin: "0 0 10px",
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: "0.22em",
+          textTransform: "uppercase",
+          color: EDU_SUCCESS,
+          fontFamily: "Inter, sans-serif",
+        }}
       >
-        Mundo 1 completado
+        5 de 5 · Camino completado
       </p>
-      <h2
-        className={`font-medium mb-2 leading-snug ${compact ? "text-lg" : "text-xl"}`}
-        style={{ color: GM_TEXT, fontFamily: "'Playfair Display', Georgia, serif" }}
+
+      <h1
+        style={{
+          margin: "0 0 12px",
+          fontFamily: "'Playfair Display', serif",
+          fontSize: "clamp(26px, 5vw, 36px)",
+          fontWeight: 400,
+          lineHeight: 1.15,
+          color: WHITE_WARM,
+        }}
       >
-        ¡Completaste el Mundo 1!
-      </h2>
-      <p className="text-sm mb-6 leading-relaxed" style={{ color: GM_TEXT_SEC }}>
-        Has terminado las 5 clases gratuitas. Elige un plan para continuar con
-        el camino completo de la academia.
+        Completaste tu primer camino en Gmusic
+      </h1>
+
+      <p
+        style={{
+          margin: "0 0 24px",
+          fontSize: 15,
+          lineHeight: 1.65,
+          color: GM_TEXT_SEC,
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Terminaste el Mundo 1: Fundamentos de la guitarra. Elige un plan para continuar con el
+        camino completo de la academia.
       </p>
+
       <Button
         onClick={onInscribirse}
-        className="w-full font-medium min-h-[44px] tracking-wide"
-        style={{ background: GM_GOLD, color: "#0A0A0A" }}
+        className="font-medium min-h-[48px] tracking-wide px-8"
+        style={{
+          background: GM_GOLD,
+          color: "#0A0A0A",
+          fontSize: 12,
+          letterSpacing: "1px",
+          textTransform: "uppercase",
+        }}
       >
         Elegir mi plan
       </Button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -149,12 +193,9 @@ interface PathDemoPageProps {
   setPage: (page: string) => void;
 }
 
-type ModalKind = "locked" | null;
-
 export function PathDemoPage({ setPage }: PathDemoPageProps) {
   const { completedLessons, demoFinished } = useDemoProgress();
 
-  const [modal, setModal] = useState<ModalKind>(null);
   const [lockedTitle, setLockedTitle] = useState<string | null>(null);
 
   const demoModules = useMemo(
@@ -164,62 +205,62 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
   const progress = useMemo(() => countPathProgress(demoModules), [demoModules]);
   const allNodes = useMemo(() => demoModules.flatMap((mod) => mod.nodes), [demoModules]);
 
-  const openNavPlaceholder = useCallback((key: string) => {
-    if (isLockedNav(key)) setModal("locked");
-  }, []);
-
   const handleViewPlans = useCallback(() => {
     navigateToHomeSection(setPage, "planes");
   }, [setPage]);
 
-  const modalProps = () => {
-    switch (modal) {
-      case "locked":
-        return {
-          title: LOCKED_NAV_MODAL.title,
-          subtitle: LOCKED_NAV_MODAL.subtitle,
-          footer: LOCKED_NAV_MODAL.footer,
-        };
-      default:
-        return { title: "" };
-    }
-  };
-
-  const mp = modalProps();
+  const handleTabChange = useCallback(
+    (tab: "inicio" | "mi-camino" | "mi-estudio" | "mi-progreso") => {
+      if (tab === "inicio") setPage("home");
+      if (tab === "mi-estudio") setPage("inscripcion-gate");
+    },
+    [setPage]
+  );
 
   return (
     <div className="min-h-screen" style={{ background: GM_BG, color: GM_TEXT }}>
-      <GmusicInternalHeader
-        activeNav="camino"
-        userName="Clase gratuita"
-        userSubtitle="Sin cuenta · Fundamento"
-        setPage={setPage}
-        onPlaceholder={openNavPlaceholder}
-      />
-
       <DemoAcademyNav
         activeTab="mi-camino"
         completedCount={completedLessons.length}
-        onTabChange={(tab) => {
-          if (tab === "inicio") setPage("home");
-          if (tab === "mi-estudio") setPage("inscripcion-gate");
-        }}
+        onTabChange={handleTabChange}
       />
 
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 lg:py-12">
-        <PathPageIntro
-          badge={DEMO_BADGE}
-          completedSteps={progress.completed}
-          totalSteps={progress.total}
-          isLoading={false}
-        />
-
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 lg:py-10">
         {demoFinished ? (
-          <div className="max-w-[600px] mx-auto">
-            <DemoFinishedPanel onInscribirse={() => setPage("inscripcion-gate")} />
-          </div>
+          <>
+            <DemoFinishedCelebration onInscribirse={() => setPage("inscripcion-gate")} />
+
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 11,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.35)",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                Tu recorrido completado
+              </p>
+            </div>
+
+            <DemoPathCards
+              nodes={allNodes}
+              allowLockedSelection={false}
+              onStartLesson={(n) => setPage(`demo-clase-${n}`)}
+              onLockedClick={() => {}}
+            />
+          </>
         ) : (
           <>
+            <PathPageIntro
+              badge={DEMO_BADGE}
+              completedSteps={progress.completed}
+              totalSteps={progress.total}
+              isLoading={false}
+            />
+
             <div
               style={{
                 textAlign: "center",
@@ -258,23 +299,12 @@ export function PathDemoPage({ setPage }: PathDemoPageProps) {
             />
             {lockedTitle && (
               <div className="max-w-[600px] mx-auto mt-6">
-                <LockedDemoNodePanel
-                  title={lockedTitle}
-                  onViewPlans={handleViewPlans}
-                />
+                <LockedDemoNodePanel title={lockedTitle} onViewPlans={handleViewPlans} />
               </div>
             )}
           </>
         )}
       </main>
-
-      <GmusicPlaceholderModal
-        open={modal !== null}
-        onClose={() => setModal(null)}
-        title={mp.title}
-        subtitle={mp.subtitle}
-        footer={mp.footer}
-      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # Project Status — Gmusic Estudio
 
-Última actualización: 12 Jun 2026 (Fase 3.5a — registro inscripción estructurado, commiteado local)
+Última actualización: 12 Jun 2026 (PostHog + Visual C — pendientes de commit)
 
 ## Fases
 
@@ -17,7 +17,9 @@
 | Fase Visual A | DemoPathCards — tarjetas verticales reemplazando mapa serpentino | ✅ Completo | `263d5f6` | 358/358 |
 | Fase Visual B | Carrusel Yousician + DemoAcademyNav (4 tabs sticky) | ✅ Completo · validado en browser | `263d5f6` | 358/358 |
 | Fase 3.5a | Registro: dos CTAs (inscripción + dudas), form boleta/factura, eliminar "reservar" copy | ✅ Completo | `35e139b` | `inscripcion-gate.test.ts` (358/358) |
-| Fase 3.5b | CTA "Semestral" landing → `inscripcion-gate` directo (Opción B, D-025); cerrar leak checkout legacy | ✅ Completo — pendiente commit | — | `semestral-checkout-flow.test.ts` (359/359) |
+| Fase 3.5b | CTA "Semestral" landing → `inscripcion-gate` directo (Opción B, D-025); cerrar leak checkout legacy | ✅ Completo | `5133075` | `semestral-checkout-flow.test.ts` (359/359) |
+| PostHog | 8 eventos de funnel; host US por defecto, configurable vía `VITE_POSTHOG_HOST` (D-026) | ✅ Completo — pendiente commit | — | `analytics.test.ts` (365/365) |
+| Visual C | Eliminar `GmusicInternalHeader` (doble nav) en `mi-camino-demo`; `DemoFinishedCelebration` centrada | ✅ Completo — pendiente commit | — | `path-demo-page.test.ts` (365/365) |
 | Fase 4 | Auth real (JWT/bcrypt/Prisma) | ⏸ Pausada — condicionada a conversión WhatsApp | — | — |
 | Fase 5 | Flow + Resend + Webhooks | ⏸ Pausada — condicionada a Fase 4 | — | — |
 
@@ -90,14 +92,28 @@ No bloqueante para el commit de Fase B — es una decisión de contenido, no un 
 
 ## Archivos sin commit
 
-Working tree con cambios sin commit (Fase 3.5b):
+Working tree con cambios sin commit (PostHog + Visual C):
 
+**Commit 1 — PostHog analytics:**
 | Archivo | Cambio |
 |---------|--------|
-| `src/app/App.tsx` | `handleSemestralPlanSelect` → `setCurrentPage("inscripcion-gate")` |
-| `src/app/utils/semestral-checkout-flow.test.ts` | Test nuevo: CTA Semestral navega a gate sin AuthModal |
-| `.agents/DECISIONS.md` | D-025 actualizado a Opción B; P-004 cerrado |
-| `.agents/PROJECT_STATUS.md` | Fase 3.5b registrada |
+| `src/app/utils/analytics.ts` | 8 eventos con guard `VITE_POSTHOG_KEY` |
+| `src/app/utils/analytics.test.ts` | Tests analytics |
+| `src/main.tsx` | Init PostHog (US host default, configurable) |
+| `src/vite-env.d.ts` | Tipo `VITE_POSTHOG_HOST` |
+| `.env.example` | Placeholder `VITE_POSTHOG_KEY` + `VITE_POSTHOG_HOST` |
+| `src/app/App.tsx` | `analytics.semestralCtaClicked()` en `handleSemestralPlanSelect` |
+| `src/app/components/music/InteractiveLevelSelector.tsx` | `analytics.demoCtaClicked()` |
+| `src/app/pages/DemoLessonPage.tsx` | `analytics.demoLessonCompleted()` + `demoCompleted()` |
+| `src/app/pages/InscripcionGatePage.tsx` | `analytics.gateViewed()` + `planSelected()` |
+| `src/app/pages/InscripcionRegistroPage.tsx` | `analytics.registroViewed()` + `whatsappCtaClicked()` |
+| `package.json` | `posthog-js` instalado |
+
+**Commit 2 — Visual C:**
+| Archivo | Cambio |
+|---------|--------|
+| `src/app/pages/PathDemoPage.tsx` | Elimina `GmusicInternalHeader`; `DemoFinishedCelebration` centrada con animación |
+| `src/app/pages/path-demo-page.test.ts` | Tests Visual C |
 
 **Pendiente de resolución (no bloquea demo):**
 
@@ -137,10 +153,10 @@ Landing → Ver clase gratuita → mi-camino-demo (carrusel Yousician, 4 tabs na
 
 **Condición de desbloqueo para Fase 4:** primera conversión real confirmada vía WhatsApp (`56953429676`).
 
-**Fase 3.5b completa** (D-025, Opción B): `handleSemestralPlanSelect` → `setCurrentPage("inscripcion-gate")`; checkout legacy ya no es alcanzable desde el CTA Semestral del landing. Pendiente commit.
+**Condición de desbloqueo para Fase 4:** primera conversión real confirmada vía WhatsApp (`56953429676`).
 
 Hasta que haya conversión, opciones disponibles:
-- Fase Visual C: quitar doble nav (GmusicInternalHeader oculto en mi-camino-demo) + eliminar PathPageIntro redundante
+- Patch pedagógico ExPulsoAire — decidir v1 vs cuerdas alternadas/silencios (validación visual Juan pendiente)
 - Fix cosmético Clase 3 video (requiere URL real de Juan)
 - PostHog analytics — 8 eventos de funnel (aprobado en principio)
 
